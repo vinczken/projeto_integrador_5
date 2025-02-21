@@ -14,6 +14,13 @@ dt = 0
 mouse_pos = pygame.mouse.get_pos()
 mouse_img = pygame.image.load("assets/imgs/mouse.png")
 
+with open("assets/map/startmap.txt", "r") as file:
+    mapa_inicial = file.read()
+
+tabu_claro = pygame.image.load("assets/imgs/tabu_claro.png")
+tabu_escuro = pygame.image.load("assets/imgs/tabu_escuro.png")
+
+tabu_pos = pygame.Vector2(0, 0)
 
 while running:
 
