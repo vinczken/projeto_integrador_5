@@ -1,0 +1,167 @@
+CLASSES:
+
+Classes principalmente para renderização dos itens em tela...
+
+-> Campo: (Field)
+
+- Atributos (podem mudar com o tempo):
+x_position
+y_position
+size
+player_id -> ENUM
+Board[4]
+
+- Base do tabuleiro, será composta pelos 4 tabuleiros do jogo, estará localizado
+no centro da tela
+- Contém a função chamada dentro da main que será responsável por atualizar os estados e
+imagens dos quatro tabuleiros
+- Contém ID do player que esta jogando atualmente, auxiliando na verificação de quais jogadas
+podem ser feitas ou não
+- Sua largura e altura será calculada a para o tamanho de 2 tabuleiros somado a margem entre eles, sendo assim
+sera de 80% da altura geral da tela, somado a 6% da altura geral da tela, sendo esses 6% relativo a margem entre eles
+- Logo, sua largura será de 86% da altura geral da tela
+- Sua posição X central será calculada a partir da seguinte forma: (((largura geral da tela) - (86% da altura geral da tela)) / 2)
+- Sua posição Y central será calculada a partir da seguinte forma: (((altura geral da tela) - (86% da altura geral da tela)) / 2)
+
+
+-> Tabuleiro: (Board)
+
+- Atributos (podem mudar com o tempo):
+x_position
+y_position
+board_index
+size 
+img_board ou rect
+selected
+Casas(Square)[16]
+
+
+- Representação de um dos quatro tabuleiros da tela, será a classe intermediária
+entre o campo principal e as peças sendo movimentadas
+- Possui dentro dele a chamada intermediária da função de atualização da tela, chamando e
+atualizando o estado de cada uma de suas casas
+- Cada tabuleiro terá 40% da altura da tela, tal valor será utilizado tanto na sua largura quanto altura
+- Cada tabuleiro terá como margens entre outros tabuleiros e acima e abaxio, 6% da altura geral da tela
+- Em relação ao total da tela, os tabuleiros inferiores e superiores terão 7% da altura geral da tela como margem
+- Tais valores serão calculados a partir da base geral do Campo que estarão
+- Suas posições X e Y são calculadas utilizando seu index:
+- As posições são distribuidas da seguinte forma (em relação a visão do jogo):
+    0 1 
+    2 3
+- Para calcular a posição X:
+    - Caso o index do tabuleiro atual modulo 2 é igual a 0, significa que ele esta na primeira coluna,
+        caso aconteça, ele recebe a posição X do próprio Campo, sendo como se fosse a posição 0,
+        também é atribuída uma cor para ele, mais escura, como no figma.
+    - Caso contrário, ele recebe a posição X do próprio campo, somado ao tamanho do tabuleiro e a margem,
+        fazendo com que ele seja desenhado na segunda coluna, ou seja, seu index só pode ser 1 ou 3.
+
+- Para calcular a posição Y:
+    - Caso o index do tabuleiro seja menor que 2, significa que ele esta na primeira linha,
+        caso aconteça, ele recebe a posição Y do próprio Campo.
+    - Caso contrário, ele recebe a posição Y do próprio campo, somado ao tamanho do tabuleiro e a margem,
+        fazendo com que ele seja desenhado na segunda linha, ou seja, seu index só pode ser 2 ou 3.
+
+
+-> Casa: (Square)
+
+- Atributos (podem mudar com o tempo):
+x_position
+y_position
+square_index
+size
+img_stone
+img_black_stone
+img_white_stone
+square_state -> ENUM
+
+
+- Representação de uma casa de tal tabuleiro, será a classe final
+- Poderá estar sem pedra, ou com uma pedra preta ou branca
+- Receberá um click do jogador caso seja a vez dele, baseado no turno e nas cores
+- Caso uma casa seja selecionada e seja a vez daquele jogador, sua base trocará de cor para 
+indicar que foi selecionada
+- Da mesma forma que, quando uma casa vazia pode ser habitada por uma pedra selecionada, sua cor mudará
+pra indicar tal movimentação
+- Sua posição X e Y é calculada a partir do seu index
+    - Para a posição X, é calculada com a posição X do tabuleiro base, somado ao tamanho da casa multiplicado pelo 
+        index da casa dividido para 4 (arredondado para baixo).
+    - Para a posição Y, é calculada com a posição Y do tabuleiro base, somado ao tamanho da casa multiplicado pelo
+        index da casa modulo 4
+    - Dessa forma é possível encontrar de forma dinâmica e rápida a linha e coluna pertencente a casa. 
+
+
+-> Status:
+
+- Atributos (podem mudar com o tempo):
+player
+x_position
+y_position
+size
+
+
+- Classe responsável por principalmente exibir na tela as informações atuais dos jogadores
+- Serão 2 status, um em cada canto da tela
+- Cada Status terá como altura 86% da altura total da tela
+- Sua largura será calculada por: ((largura geral da tela) - (86% da altura geral da tela) * 0.75) / 2
+- Assim como os tabuleiros, cada status se distanciará do Campo principal com uma margem de 7% da altura geral da tela
+
+
+-> AssetRender:
+
+- Atributos (podem mudar com o tempo):
++ {Assets que serão utilizados e renderizados}
+
+- Classe responsável por conter todas as imagens e itens que serão utilizados 
+- Todas as imagens do jogo serão instanciadas nele, funcionando como um singleton que abrirá cada imagem e atribuirá onde for necessário
+- Poderá ser enviado para classes de renderização para gerar e atualizar tais estados
+
+-> Controlador: (Controller)
+
+- Atributos (podem mudar com o tempo):
+screen_width
+screen_height
+player_1
+player_2
+Campo
+Status_p1
+Status_p2
+AssetRender 
+
+- Classe responsável por controlar a situação do jogo, verificando quem jogará e se houve ou não ganhador até então
+- Contém informações da tela, sendo enviadas para para cada classe sendo iniciada
+
+
+-> Jogador: (Player)
+
+- Atributos (podem mudar com o tempo):
+player_id -> ENUM
+score
+
+- Classe que representa o jogador
+- Possui a cor de suas pedras, seus pontos e seu identificador
+
+
+-> SquareState(Enum)
+
+- Representação de um estado de uma casa (ou square) do jogo
+- Os estados(states) serão: preto, branco, selecionado, selecionado_preto, selecionado_branco e vazio,
+ou, black, white, selected, selected_black, selected_white e empty
+
+
+-> PlayerId (Enum)
+
+- Representação dos identificadores dos jogadores dentro das classes de campo, tabuleiro e casa
+- Os ids dos jogadores(PlayerIds) serão: player1, player2
+
+
+FUNÇÃO DE ATUALIZAÇÃO DE TELA
+
+-> Chamada na main
+
+-> Localizada na instância do Controlador
+
+-> Entra em contato com a função de atualização da classe de Campo e de status
+ 
+-> Chama as funções individuais de cada tabuleiro
+
+-> Dentro de cada tabuleiro, tal função será responsável por atualizar o estado de cada casa
