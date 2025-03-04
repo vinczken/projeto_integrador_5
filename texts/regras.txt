@@ -1,0 +1,152 @@
+-> Regras do SHOBU
+
+ -> Ordem dos tabuleiros:
+
+	0 1
+	2 3
+
+-> Tabuleiros do jogador 1: 0, 1
+-> Tabuleiros do jogador 2: 2, 3
+
+-> O jogador movimenta duas pedras, cada uma em um tabuleiro diferente,
+	por turno
+-> Pelo menos um movimento deve ser realizado num dos tabuleiros do jogador
+
+-> O Jogador pode realizar os dois movimentos em seus dois tabuleiros
+
+-> O jogador pode somente realizar movimentações de suas pedras
+
+-> Pelo menos um dos movimentos do jogador deve ser realizado de forma passiva,
+	significando que o jogador não pode movimentar nenhuma pedra do adversário
+
+-> Tal movimento passivo deve ser realizado num dos dois tabuleiros do jogador
+
+-> Caso um movimento seja realizado num dos tabuleiros do adversário, será considerado 
+	agressivo
+
+-> De forma que, caso um movimento realizado num dos campos do jogador movimente uma pedra,
+	também será considerado agressivo
+
+-> As jogadas não podem ser feitas em tabuleiros da mesma cor
+
+-> Vence aquele que conseguir tirar todas as 4 pedras de um dos 4 tabuleiros
+
+-> As pedras só podem ser movidas até duas casas em cada direção, porém as duas pedras
+	movimentadas deverão se movimentar na mesma direção e com a mesma quantidade de casas
+
+-> Somente uma pedra adversária pode ser movida por vez
+
+
+REGRAS ENXUTAS:
+
+-> Tabuleiros:
+	0 1  -> Jogador 1
+	2 3  -> Jogador 2
+
+-> 2 movimentos por vez
+
+-> Movimentos iguais e em tabuleiros de cores diferentes
+
+-> Movimentos passivos: realizados nos tabuleiros do jogador, não movimentam pedras inimigas
+-> Movimentos agressivos: realizados nos tabuleiros adversários e feitos em 
+	tabuleiros próprios quando movimentam pedras adversárias
+
+-> Ao menos 1 movimento passivo por turno
+-> Somente uma pedra pode ser movida por vez
+-> Movimentos devem ser realizados em tabuleiros diferentes
+
+-> Movimentos realizados em qualquer direção, até duas casas ao redor da pedra
+
+-> Jogar todas as pedras adversárias de um tabuleiro para fora
+
+Formato do tabuleiro:
+
+	W W W W
+	0 0 0 0
+	0 0 0 0
+	B B B B
+
+Formatação do campo e funcionalidades:
+
+-> Tabuleiros no formato de array de strings:
+	W -> para peças brancas
+	B -> para peças pretas
+	vazio -> para espaços sem peças
+	
+-> Array:
+
+state = [
+	"W","W","W","W",
+	"","","","",
+	"","","","",
+	"B","B","B","B",
+	"W","W","W","W",
+	"","","","",
+	"","","","",
+	"B","B","B","B",
+	"W","W","W","W",
+	"","","","",
+	"","","","",
+	"B","B","B","B",
+	"W","W","W","W",
+	"","","","",
+	"","","","",
+	"B","B","B","B",
+]
+
+-> Ao selecionar uma peça de um tabuleiro, armazenar qual tabuleiro foi selecionado e qual o index da peça
+	-> Para encontrar o tabuleiro selecionado:
+		Pela interface: obter o index da casa selecionada e tabuleiro, pelos próprios objetos é possível
+		Pelo array: tendo obtido o index do item não vazio selecionado, será necessário obter
+			o index do tabuleiro e o index da própria casa
+			para o tabuleiro: dividir o index por 16 e arredondar para baixo
+			para a casa: aplicar módulo 16
+			
+			Exemplo: Index selecionado: 35
+				35 % 16 = 3 -> É a casa de index 3 do tabuleiro
+				35 / 16 = 2.18 -> floor(2.18) = 2 -> É o tabuleiro de index 2
+
+			Exemplo reverso: Index selecionado: casa de index 3 do tabuleiro de index 2:
+				A conta será 16 * INDEX_TABULEIRO + INDEX_CASA
+				Logo: 16 * 2 + 3 -> 35
+			
+-> Serão necessárias funções que manipulam o array de estados e que enviem o que for necessário
+	ao front-end, de mesmo modo, serão necessárias funções que captem os dados do front-end e 
+	enviem e manipulem o array
+
+-> Tal array estará localizado na classe do controlador
+
+-> Os esquemas de transporte de informações serão:
+
+	Esquema para envio de dados (->)
+	-> O array no controlador registra o estado atual das peças
+	-> O controlador emite as informações necessárias ao campo
+	-> O Campo emite as informações necessárias aos devidos tabuleiros
+	-> Os tabuleiros emitem as informações as casas
+
+	Esquema para recebimento de dados (<-)
+	-> A casa emite uma informação de seleção
+	-> O Tabuleiro recebe a informação da casa e emite a informação ao campo
+	-> O campo recebe tais informações e emite ao controlador
+	-> O controlador recebe tais informações e faz as ações necessárias
+	-> Esquema de envio de dados (->) é iniciado.
+
+
+	Exemplo de caso: A casa de index 3 do tabuleiro de index 2 é selecionada, 
+						não há outra casa selecionada
+
+	-> A Casa recebe a informação de que houve um click
+	-> Seu estado é alterado para 'Selected'
+	-> A Casa emite a informação de que foi selecionada
+	-> O Tabuleiro recebe a informação de que houve um click na sua região
+	-> O Tabuleiro recebe a informação da pedra que foi selecionada
+	-> O Tabuleiro bloqueia a ação de selecionar outra de suas Casas,
+		exceto pela própria casa, que pode ser desmarcada ainda
+	-> O Tabuleiro emite a informação do index da pedra e do seu próprio index para o Campo
+	-> O Campo recebe tais informações
+	-> O Campo emite dados aos Tabuleiros que não podem ser mais selecionados
+	-> O Campo emite as informações ao Controlador
+	-> O Controlador verifica a atual situação do array de estados
+	-> O Controlador registra em suas regras que aquele item foi selecionado
+
+
