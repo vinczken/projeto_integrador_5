@@ -1,6 +1,8 @@
 from math import floor
 from pygame import Surface, draw, SRCALPHA
 from enuns.squareState import SquareState
+from enuns.playerId import PlayerId
+from misc.generalUtils import GeneralUtils
 
 class Square(object):
     
@@ -40,3 +42,48 @@ class Square(object):
             self.display.blit(self.stone, (self.x_position, self.y_position))
             
         return
+
+
+    # Verifica se houve um click em uma casa ja selecionada
+    def handle_selected_click(self, mouse_position):
+        
+        if self.square_state not in (SquareState.Selected_Black, SquareState.Selected_White):
+            return False
+
+        if not GeneralUtils.verify_click((self.x_position, self.y_position), self.size, self.size, mouse_position):
+            return False
+            
+        if self.square_state == SquareState.Selected_Black:
+            self.square_state = SquareState.Black
+                        
+        if self.square_state == SquareState.Selected_White:
+            self.square_state = SquareState.White
+        
+        print(f"Uma peça deixou de ser selecionada -> index {self.square_index}")
+        
+        return True
+
+
+    def handle_click(self, mouse_position, player_id: PlayerId):
+
+        if not GeneralUtils.verify_click((self.x_position, self.y_position), self.size, self.size, mouse_position):
+            return False
+        
+        if self.square_state == SquareState.Empty:
+            return False
+        
+        assignment_flag = False
+        
+        if self.square_state == SquareState.Black and player_id == PlayerId.Player2:
+            self.square_state = SquareState.Selected_Black
+            assignment_flag = True                       
+                        
+        if self.square_state == SquareState.White and player_id == PlayerId.Player1:
+            self.square_state = SquareState.Selected_White
+            assignment_flag = True
+
+
+        if assignment_flag:
+            print(f"Uma peça foi selecionada: -> index: {self.square_index}")
+
+        return assignment_flag

@@ -75,7 +75,7 @@ Formatação do campo e funcionalidades:
 	
 -> Array:
 
-state = [
+game_state = [
 	"W","W","W","W",
 	"","","","",
 	"","","","",

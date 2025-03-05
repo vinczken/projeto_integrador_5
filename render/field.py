@@ -1,6 +1,7 @@
 from pygame import Surface
 from enuns.playerId import PlayerId
 from render.board import Board
+from misc.generalUtils import GeneralUtils
 
 class Field(object):
 
@@ -12,6 +13,7 @@ class Field(object):
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.player_id = PlayerId.Player1
+        self.selected_boards_index = []
         
         self.boards = [
             Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 0),
@@ -27,3 +29,26 @@ class Field(object):
         
         return
     
+    def handle_click(self, mouse_position):
+        
+        if not GeneralUtils.verify_click((self.x_position, self.y_position), self.size, self.size, mouse_position):
+            return
+          
+        for index in range(4):
+            
+            if index in self.selected_boards_index:
+                
+                if self.boards[index].handle_selected_click(mouse_position):
+                    self.selected_boards_index.remove(index)
+                    
+                    return
+                
+            
+            if self.boards[index].handle_click(mouse_position, self.player_id):
+                self.selected_boards_index.append(index)
+                                
+                blocked_board_index = (index + 2) % 4
+                
+                self.boards[blocked_board_index].blocked = True
+                
+                return

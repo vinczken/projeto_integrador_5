@@ -39,6 +39,11 @@ while running:
     for event in pygame.event.get():  # pygame.QUIT event means the user clicked X to close your window
         if event.type == pygame.QUIT: running = False
     
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            controller.handle_click(event.pos)
+                        
+    
     # poll for events
     mouse_pos = pygame.mouse.get_pos()
     mouse_pos = [mouse_pos[0] - size_img_mouse[0] / 2, mouse_pos[1] - size_img_mouse[1] / 2]
