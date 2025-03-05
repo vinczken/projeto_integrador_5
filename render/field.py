@@ -40,6 +40,10 @@ class Field(object):
                 
                 if self.boards[index].handle_selected_click(mouse_position):
                     self.selected_boards_index.remove(index)
+                
+                    blocked_board_index = (index + 2) % 4
+                
+                    self.boards[blocked_board_index].blocked = False
                     
                     return
                 
@@ -50,5 +54,5 @@ class Field(object):
                 blocked_board_index = (index + 2) % 4
                 
                 self.boards[blocked_board_index].blocked = True
-                
+                                
                 return

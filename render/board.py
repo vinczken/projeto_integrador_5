@@ -72,6 +72,9 @@ class Board(object):
                     
         for index in range(16):
             
+            if self.selected and self.squares[index].square_state != SquareState.Highlighted:
+                continue
+            
             if self.squares[index].handle_click(mouse_position, player_id):
                 self.selected_square = index
                 self.selected = True

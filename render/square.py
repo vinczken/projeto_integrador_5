@@ -16,6 +16,7 @@ class Square(object):
         
         self.base = Surface((self.size, self.size))
         self.base.fill(base_background_color)
+        self.base_background_color = base_background_color
         draw.rect(self.base, (0, 0, 0), (0, 0, self.size, self.size), 5)
     
         self.stone = Surface((self.size, self.size), SRCALPHA)
@@ -60,6 +61,8 @@ class Square(object):
             self.square_state = SquareState.White
         
         print(f"Uma peça deixou de ser selecionada -> index {self.square_index}")
+        self.base.fill(self.base_background_color)
+        draw.rect(self.base, (0, 0, 0), (0, 0, self.size, self.size), 5)
         
         return True
 
@@ -85,5 +88,7 @@ class Square(object):
 
         if assignment_flag:
             print(f"Uma peça foi selecionada: -> index: {self.square_index}")
+            self.base.fill((178, 216, 220))
+            draw.rect(self.base, (0, 0, 0), (0, 0, self.size, self.size), 5)
 
         return assignment_flag
