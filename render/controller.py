@@ -26,7 +26,7 @@ class Controller(object):
             "W","W","W","W",
             "","","","",
             "","","","",
-            "B","B","B","B"            
+            "B","B","B","B"
         ]
         
     def draw(self):
@@ -35,4 +35,10 @@ class Controller(object):
     
     def handle_click(self, mouse_position):
         self.field.handle_click(mouse_position)
+
+        if len(self.field.selected_indexes) == 2:
+            print("Duas casas foram selecionadas!")
+            print(f"Primeira seleção: Board index: {self.field.selected_indexes[0].board_index}; Square index: {self.field.selected_indexes[0].square_index}")
+            print(f"Primeira seleção: Board index: {self.field.selected_indexes[1].board_index}; Square index: {self.field.selected_indexes[1].square_index}")
+
         return

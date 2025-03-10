@@ -2,6 +2,7 @@ from pygame import Surface
 from enuns.playerId import PlayerId
 from render.board import Board
 from misc.generalUtils import GeneralUtils
+from misc.selectionProperties import SelectionProperties
 
 class Field(object):
 
@@ -13,7 +14,7 @@ class Field(object):
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.player_id = PlayerId.Player1
-        self.selected_boards_index = []
+        self.selected_indexes = []
         
         self.boards = [
             Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 0),
@@ -33,14 +34,16 @@ class Field(object):
         
         if not GeneralUtils.verify_click((self.x_position, self.y_position), self.size, self.size, mouse_position):
             return
-          
+            
         for index in range(4):
             
-            if index in self.selected_boards_index:
+            if (selected_index := next((obj for obj in self.selected_indexes if obj.board_index == index), None)):
                 
                 if self.boards[index].handle_selected_click(mouse_position):
-                    self.selected_boards_index.remove(index)
-                
+                    self.selected_indexes.remove(selected_index)
+
+                    self.selected_indexes = [obj for obj in self.selected_indexes if obj.board_index != index]
+
                     blocked_board_index = (index + 2) % 4
                 
                     self.boards[blocked_board_index].blocked = False
@@ -49,10 +52,13 @@ class Field(object):
                 
             
             if self.boards[index].handle_click(mouse_position, self.player_id):
-                self.selected_boards_index.append(index)
+
+                selected_square = self.boards[index].selected_square
+
+                self.selected_indexes.append(SelectionProperties(index, selected_square))
                                 
                 blocked_board_index = (index + 2) % 4
                 
                 self.boards[blocked_board_index].blocked = True
-                                
+                            
                 return
