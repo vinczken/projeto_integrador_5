@@ -42,12 +42,18 @@ class Controller(object):
             print(f"Primeira seleção: Board index: {self.field.selected_indexes[1].board_index}; Square index: {self.field.selected_indexes[1].square_index}")
 
         if len(self.field.selected_indexes) == 2:
-            self.calculate_valid_moves(self.field.selected_indexes[0].square_index)
-            self.calculate_valid_moves(self.field.selected_indexes[1].square_index)
+            boardA = self.field.selected_indexes[0].board_index
+            boardB = self.field.selected_indexes[1].board_index
+
+            boardA_state = self.game_state[(16 * boardA) : (16 * (boardA + 1))]
+            boardB_state = self.game_state[(16 * boardB) : (16 * (boardB + 1))]
+            
+            self.calculate_valid_moves(self.field.selected_indexes[0].square_index, boardA_state)
+            self.calculate_valid_moves(self.field.selected_indexes[1].square_index, boardB_state)
 
         return
     
-    def calculate_valid_moves(self, square_index):
+    def calculate_valid_moves(self, square_index, board_state):
         row_square = int(square_index / 4)
         column_square = square_index % 4
         moves_index = []
