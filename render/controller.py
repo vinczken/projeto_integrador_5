@@ -1,3 +1,4 @@
+from misc.indexCalc import IndexCalculator
 from pygame import Surface
 from render.field import Field
 
@@ -37,8 +38,42 @@ class Controller(object):
         self.field.handle_click(mouse_position)
 
         if len(self.field.selected_indexes) == 2:
-            print("Duas casas foram selecionadas!")
             print(f"Primeira seleção: Board index: {self.field.selected_indexes[0].board_index}; Square index: {self.field.selected_indexes[0].square_index}")
             print(f"Primeira seleção: Board index: {self.field.selected_indexes[1].board_index}; Square index: {self.field.selected_indexes[1].square_index}")
 
+        if len(self.field.selected_indexes) == 2:
+            self.calculate_valid_moves(self.field.selected_indexes[0].square_index)
+            self.calculate_valid_moves(self.field.selected_indexes[1].square_index)
+
         return
+    
+    def calculate_valid_moves(self, square_index):
+        row_square = int(square_index / 4)
+        column_square = square_index % 4
+        moves_index = []
+        for row in range(4):
+            if abs(row - row_square) == 2:
+                moves_index.append(IndexCalculator.calculate(row, column_square))
+                if column_square - 2 >= 0:
+                    moves_index.append(IndexCalculator.calculate(row, column_square - 2))
+                if column_square + 2 < 4:
+                    moves_index.append(IndexCalculator.calculate(row, column_square + 2))
+                    
+            elif abs(row - row_square) == 1:
+                moves_index.append(IndexCalculator.calculate(row, column_square))
+                if column_square - 1 >= 0:
+                    moves_index.append(IndexCalculator.calculate(row, column_square - 1))
+                if column_square + 1 < 4:
+                    moves_index.append(IndexCalculator.calculate(row, column_square + 1))
+                    
+            elif row == row_square:
+                if column_square - 2 >= 0:
+                    moves_index.append(IndexCalculator.calculate(row, column_square - 2))
+                if column_square - 1 >= 0:
+                    moves_index.append(IndexCalculator.calculate(row, column_square - 1))
+                if column_square + 1 < 4:
+                    moves_index.append(IndexCalculator.calculate(row, column_square + 1))
+                if column_square + 2 < 4:
+                    moves_index.append(IndexCalculator.calculate(row, column_square + 2))
+
+        print(moves_index)
