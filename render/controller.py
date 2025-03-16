@@ -9,7 +9,6 @@ class Controller(object):
         self.screen_width = display.get_width()
         self.screen_height = display.get_height()
         self.display = display
-        self.field = Field(display, self.screen_width, self.screen_height)
         
         self.game_state = [
             "W","W","W","W",
@@ -30,6 +29,7 @@ class Controller(object):
             "B","B","B","B"
         ]
         
+        self.field = Field(display, self.screen_width, self.screen_height, self.game_state)
         
         # row, column
         self.aux_positions = {
@@ -59,6 +59,7 @@ class Controller(object):
         print("Possiveis movimentos:")
         print(moviments)
         
+        self.field.set_moviments(moviments)
         
         
     def merge_moves(self, boardA_moves, boardB_moves):

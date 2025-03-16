@@ -6,7 +6,7 @@ from misc.selectionProperties import SelectionProperties
 
 class Field(object):
 
-    def __init__(self, display: Surface, screen_width, screen_height):
+    def __init__(self, display: Surface, screen_width, screen_height, game_state):
         self.display = display
         self.size = 0.86 * screen_height        
         self.x_position = (screen_width - self.size) / 2
@@ -14,21 +14,36 @@ class Field(object):
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.player_id = PlayerId.Player1
+        self.game_state = game_state
         self.selected_indexes = []
+        self.moviments = []
+        self.boards = []
         
-        self.boards = [
-            Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 0),
-            Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 1),
-            Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 2),
-            Board(self.display, self.screen_width, self.screen_height, self.x_position, self.y_position, 3)            
-        ]    
+        for index in range(4):
+            self.boards.append(
+                  Board(
+                      self.display, 
+                      self.screen_width,
+                      self.screen_height,
+                      self.x_position, 
+                      self.y_position, 
+                      index, 
+                      game_state[(index * 16): ((index + 1) * 16)]
+                    )
+                )
+            
     
-    
-    def draw(self):
+    def draw(self):    
+        
         for index in range(4):
             self.boards[index].draw()
         
         return
+    
+    def clean_moviments(self):
+        for selected_index in self.selected_indexes:
+            self.boards[selected_index.board_index].clean_moviments()
+                    
     
     def handle_click(self, mouse_position):
         
@@ -40,6 +55,8 @@ class Field(object):
             if (selected_index := next((obj for obj in self.selected_indexes if obj.board_index == index), None)):
                 
                 if self.boards[index].handle_selected_click(mouse_position):
+                    self.clean_moviments()
+                    
                     self.selected_indexes.remove(selected_index)
 
                     self.selected_indexes = [obj for obj in self.selected_indexes if obj.board_index != index]
@@ -62,3 +79,11 @@ class Field(object):
                 self.boards[blocked_board_index].blocked = True
                             
                 return
+    
+    def set_moviments(self, moviments):
+        
+        self.moviments = moviments
+        
+        for i in range(2):
+            selected_board_index = self.selected_indexes[i].board_index                
+            self.boards[selected_board_index].set_moviments([moviment[i] for moviment in moviments])

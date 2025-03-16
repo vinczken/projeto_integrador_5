@@ -5,5 +5,5 @@ class SquareState(Enum):
     Black = 1,
     White = 2,
     Highlighted = 3,
-    Selected_Black = 4,
-    Selected_White = 5
+    Highlighted_Black = 4,
+    Highlighted_White = 5

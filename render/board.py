@@ -6,7 +6,7 @@ from enuns.playerId import PlayerId
 
 class Board(object):
     
-    def __init__(self, display: Surface, screen_width, screen_height, field_x, field_y, board_index: int):
+    def __init__(self, display: Surface, screen_width, screen_height, field_x, field_y, board_index: int, board_state):
         self.display = display
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -15,6 +15,9 @@ class Board(object):
         self.blocked = False
         self.size = screen_height * 0.4
         self.selected_square = -1
+        self.board_state = board_state
+        self.possible_moviments = []
+        
         
         margin = screen_height * 0.06
         
@@ -49,13 +52,20 @@ class Board(object):
         return    
 
 
+    def clean_moviments(self):
+        for index in self.possible_moviments:
+            self.squares[index].set_unhighlighted(self.board_state[index])
+
+        self.possible_moviments = []
+                
+
     # Verifica se uma peça selecionada foi clicada
     def handle_selected_click(self, mouse_position):
         
         if self.selected and self.selected_square > -1:
             if self.squares[self.selected_square].handle_selected_click(mouse_position):                
                 self.selected_square = -1
-                self.selected = False
+                self.selected = False                
 
                 return True
 
@@ -82,3 +92,11 @@ class Board(object):
                 return True       
 
         return False          
+    
+    
+    def set_moviments(self, possible_moviments):
+        self.possible_moviments = possible_moviments
+
+        for index in possible_moviments:
+            self.squares[index].set_highlighted()
+        
