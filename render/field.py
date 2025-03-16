@@ -3,10 +3,11 @@ from enuns.playerId import PlayerId
 from render.board import Board
 from misc.generalUtils import GeneralUtils
 from misc.selectionProperties import SelectionProperties
+from misc.movimentProperties import MovimentProperties
 
 class Field(object):
 
-    def __init__(self, display: Surface, screen_width, screen_height, game_state):
+    def __init__(self, display: Surface, screen_width, screen_height, game_state, update_game_state):
         self.display = display
         self.size = 0.86 * screen_height        
         self.x_position = (screen_width - self.size) / 2
@@ -16,8 +17,11 @@ class Field(object):
         self.player_id = PlayerId.Player1
         self.game_state = game_state
         self.selected_indexes = []
+        self.raw_moviments = []
         self.moviments = []
         self.boards = []
+        
+        self.update_game_state = update_game_state
         
         for index in range(4):
             self.boards.append(
@@ -41,9 +45,42 @@ class Field(object):
         return
     
     def clean_moviments(self):
+        
+        self.raw_moviments = []
+        
         for selected_index in self.selected_indexes:
             self.boards[selected_index.board_index].clean_moviments()
                     
+                    
+    def handle_moviment(self, selected_index: SelectionProperties, moviment_index: int):        
+        index_selected = self.selected_indexes.index(selected_index)
+        
+        selected_item = self.moviments[moviment_index]
+    
+        selected_square = selected_item[index_selected]
+                
+        item = next((i for i, obj in enumerate(self.raw_moviments[index_selected]) if obj is not None and (obj[0] == selected_square or obj[1] == selected_square)), -1)
+    
+        tuple_item_index = self.raw_moviments[index_selected][item].index(selected_square)
+    
+        moviment_A = MovimentProperties(self.selected_indexes[0], self.raw_moviments[0][item], item, tuple_item_index)
+        moviment_B = MovimentProperties(self.selected_indexes[1], self.raw_moviments[1][item], item, tuple_item_index)
+                
+        self.update_game_state(moviment_A, moviment_B)
+        
+        for selected_index in self.selected_indexes:
+            board_index = selected_index.board_index 
+            self.boards[board_index].update_game_state(self.game_state[(16 * board_index) : 16 * (board_index + 1)])
+            
+        for i in range(4):
+            self.boards[i].blocked = False           
+            
+        self.selected_indexes = []
+        self.raw_moviments = []
+        self.moviments = []
+    
+        return
+                            
     
     def handle_click(self, mouse_position):
         
@@ -67,6 +104,12 @@ class Field(object):
                     
                     return
                 
+                if len(self.selected_indexes) == 2:
+                    moviment_index = self.boards[index].handle_moviment_click(mouse_position, self.player_id)
+                
+                    if moviment_index:
+                        self.handle_moviment(selected_index, moviment_index)
+                        return 
             
             if self.boards[index].handle_click(mouse_position, self.player_id):
 
@@ -80,9 +123,11 @@ class Field(object):
                             
                 return
     
-    def set_moviments(self, moviments):
+    
+    def set_moviments(self, moviments, raw_moviments):
         
         self.moviments = moviments
+        self.raw_moviments = raw_moviments
         
         for i in range(2):
             selected_board_index = self.selected_indexes[i].board_index                

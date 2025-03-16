@@ -1,6 +1,8 @@
 from misc.indexCalc import IndexCalculator
 from pygame import Surface
 from render.field import Field
+from misc.movimentProperties import MovimentProperties
+from misc.selectionProperties import SelectionProperties
 
 class Controller(object):
     
@@ -27,10 +29,9 @@ class Controller(object):
             "","","","",
             "","","","",
             "B","B","B","B"
-        ]
+        ]        
         
-        self.field = Field(display, self.screen_width, self.screen_height, self.game_state)
-        
+        self.field = Field(self.display, self.screen_width, self.screen_height, self.game_state, self.update_game_state)
         # row, column
         self.aux_positions = {
             0: (-3, -3),
@@ -54,12 +55,9 @@ class Controller(object):
         boardA_moves = self.calculate_valid_moves(self.field.selected_indexes[0].square_index, boardA_state)
         boardB_moves = self.calculate_valid_moves(self.field.selected_indexes[1].square_index, boardB_state)
         
-        moviments = self.merge_moves(boardA, boardA_moves, boardB, boardB_moves)
+        moviments = self.merge_moves(boardA, boardA_moves, boardB, boardB_moves)    
         
-        print("Possiveis movimentos:")
-        print(moviments)
-        
-        self.field.set_moviments(moviments)
+        self.field.set_moviments(moviments, [boardA_moves, boardB_moves])
         
         
     def merge_moves(self, boardA_index, boardA_moves, boardB_index, boardB_moves):
@@ -184,10 +182,42 @@ class Controller(object):
         self.field.handle_click(mouse_position)
 
         if len(self.field.selected_indexes) == 2:
-            print(f"Primeira seleção: Board index: {self.field.selected_indexes[0].board_index}; Square index: {self.field.selected_indexes[0].square_index}")
-            print(f"Primeira seleção: Board index: {self.field.selected_indexes[1].board_index}; Square index: {self.field.selected_indexes[1].square_index}")
-
-        if len(self.field.selected_indexes) == 2:
             self.handle_moves()
 
+        return
+    
+    def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties):
+        
+        moviments = [moviment_properties_A, moviment_properties_B]
+        
+        for moviment in moviments:            
+                        
+            selected_index = IndexCalculator.calculate_game_state(moviment.selection_properties.square_index, moviment.selection_properties.board_index)
+            moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[moviment.selection_index], moviment.selection_properties.board_index)
+                    
+            if moviment.selection_index == 0:
+        
+                if moviment.moviment_direction[1] is not None:                    
+                    secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
+                    
+                    self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+                
+            else:
+                
+                row, column = IndexCalculator.calculate_row_column(moviment.selection_properties.square_index)
+                
+                row_sum, column_sum = self.aux_positions[moviment.direction_index]
+                
+                if 0 <= row + row_sum <= 3 and 0 <= column + column_sum <= 3:
+                    index_in_board = IndexCalculator.calculate(row + row_sum, column + column_sum)
+
+                    if self.game_state[moviment_index] != "":
+                        secondary_moviment_index = IndexCalculator.calculate_game_state(index_in_board, moviment.selection_properties.board_index)
+                        
+                        self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+                
+                
+            self.game_state[moviment_index] = self.game_state[selected_index]
+            self.game_state[selected_index] = ""         
+                                                                
         return

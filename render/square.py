@@ -32,7 +32,6 @@ class Square(object):
             self.square_state = SquareState.White
     
         center = self.size / 2
-    
         draw.circle(self.stone, stone_color, (center, center), ((self.size - self.size * 0.3) / 2))
        
         
@@ -57,15 +56,26 @@ class Square(object):
     def set_unhighlighted(self, square_content):        
         self.update_background(self.base_background_color)
         
+        stone_color = (0, 0, 0)
+        draw_circle = False
+        
         if square_content == "B":
             self.square_state = SquareState.Black
+            stone_color = (33, 38, 33) 
+            draw_circle = True
         
         elif square_content == "W":
             self.square_state = SquareState.White
+            stone_color = (163, 159, 132)
+            draw_circle = True
 
         elif square_content == "":
             self.square_state = SquareState.Empty
-                   
+            
+        if draw_circle:
+            center = self.size / 2
+            draw.circle(self.stone, stone_color, (center, center), ((self.size - self.size * 0.3) / 2))        
+        
         
     def draw(self):
         self.display.blit(self.base, (self.x_position, self.y_position))
@@ -91,7 +101,6 @@ class Square(object):
         if self.square_state == SquareState.Highlighted_White:
             self.square_state = SquareState.White
         
-        print(f"Uma peça deixou de ser selecionada -> index {self.square_index}")
         self.base.fill(self.base_background_color)
         draw.rect(self.base, (0, 0, 0), (0, 0, self.size, self.size), 5)
         
@@ -108,6 +117,11 @@ class Square(object):
         
         assignment_flag = False
         
+        if (self.square_state == SquareState.Highlighted or 
+            self.square_state == SquareState.Highlighted_Black or 
+            self.square_state == SquareState.Highlighted_White):
+            assignment_flag = True
+        
         if self.square_state == SquareState.Black and player_id == PlayerId.Player2:
             self.square_state = SquareState.Highlighted_Black
             assignment_flag = True                       
@@ -118,7 +132,6 @@ class Square(object):
 
 
         if assignment_flag:
-            print(f"Uma peça foi selecionada: -> index: {self.square_index}")
             self.base.fill((60, 16, 7))
             draw.rect(self.base, (0, 0, 0), (0, 0, self.size, self.size), 5)
 

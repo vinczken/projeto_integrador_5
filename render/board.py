@@ -59,13 +59,24 @@ class Board(object):
         self.possible_moviments = []
                 
 
+    # Verifica se um movimento possível foi feito
+    def handle_moviment_click(self, mouse_position, player_id: PlayerId):
+        
+        for index in range(len(self.possible_moviments)):
+            
+            if self.squares[self.possible_moviments[index]].handle_click(mouse_position, player_id):
+                return index
+            
+        return None
+
+
     # Verifica se uma peça selecionada foi clicada
     def handle_selected_click(self, mouse_position):
         
         if self.selected and self.selected_square > -1:
             if self.squares[self.selected_square].handle_selected_click(mouse_position):                
                 self.selected_square = -1
-                self.selected = False                
+                self.selected = False   
 
                 return True
 
@@ -99,4 +110,18 @@ class Board(object):
 
         for index in possible_moviments:
             self.squares[index].set_highlighted()
+       
+        
+    def update_game_state(self, new_state):
+        self.board_state = new_state
+        
+        for i in range(len(self.squares)):
+            self.squares[i].set_unhighlighted(self.board_state[i])
+            
+        
+        self.selected = False
+        self.blocked = False
+        self.selected_square = -1
+        self.possible_moviments = []
+        
         
