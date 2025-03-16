@@ -54,7 +54,7 @@ class Controller(object):
         boardA_moves = self.calculate_valid_moves(self.field.selected_indexes[0].square_index, boardA_state)
         boardB_moves = self.calculate_valid_moves(self.field.selected_indexes[1].square_index, boardB_state)
         
-        moviments = self.merge_moves(boardA_moves, boardB_moves)
+        moviments = self.merge_moves(boardA, boardA_moves, boardB, boardB_moves)
         
         print("Possiveis movimentos:")
         print(moviments)
@@ -62,7 +62,7 @@ class Controller(object):
         self.field.set_moviments(moviments)
         
         
-    def merge_moves(self, boardA_moves, boardB_moves):
+    def merge_moves(self, boardA_index, boardA_moves, boardB_index, boardB_moves):
         
         moviments = []
         
@@ -73,12 +73,34 @@ class Controller(object):
             
             move_A = boardA_moves[move_index]
             move_B = boardB_moves[move_index]
-        
+                        
+                                    
             if move_A[0] and move_B[0]:
-                moviments.append((move_A[0], move_B[0]))
+
+                move_A_index_0 = IndexCalculator.calculate_game_state(move_A[0], boardA_index)
+                move_B_index_0 = IndexCalculator.calculate_game_state(move_B[0], boardB_index)                
+                
+                if not (self.game_state[move_A_index_0] != "" and self.game_state[move_A_index_0] == self.game_state[move_B_index_0]):    
+                    moviments.append((move_A[0], move_B[0]))
+ 
                 
             if move_A[1] and move_B[1]:
-                moviments.append((move_A[1], move_B[1]))
+                
+                move_A_index_0 = IndexCalculator.calculate_game_state(move_A[0], boardA_index)
+                move_B_index_0 = IndexCalculator.calculate_game_state(move_B[0], boardB_index)
+                move_A_index_1 = IndexCalculator.calculate_game_state(move_A[1], boardA_index)
+                move_B_index_1 = IndexCalculator.calculate_game_state(move_B[1], boardB_index)
+            
+                if not (self.game_state[move_A_index_1] != "" and self.game_state[move_A_index_1] == self.game_state[move_B_index_1]):
+                    
+                    if self.game_state[move_A_index_0] != "" and self.game_state[move_A_index_0] == self.game_state[move_B_index_1]:                
+                        continue
+                    
+                    if self.game_state[move_B_index_0] != "" and self.game_state[move_B_index_0] == self.game_state[move_A_index_1]:
+                        continue
+                    
+                    moviments.append((move_A[1], move_B[1]))
+
         
         return moviments
     
