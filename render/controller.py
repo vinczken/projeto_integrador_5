@@ -81,6 +81,8 @@ class Controller(object):
                 if not (self.game_state[move_A_index_0] != "" and self.game_state[move_A_index_0] == self.game_state[move_B_index_0]):    
                     moviments.append((move_A[0], move_B[0]))
  
+                else:
+                    continue
                 
             if move_A[1] and move_B[1]:
                 
@@ -113,9 +115,11 @@ class Controller(object):
         
         itemA = 0
         itemB = 0
+        iteration = 0
+        
         
         for row in range(-1, 2):             
-             for column in range(- 1, 2):
+             for column in range(- 1, 2):                      
                     
                 if row == 0 and column == 0:
                     continue    
@@ -133,6 +137,8 @@ class Controller(object):
                     itemB = None
                     
                 tuples.append((itemA, itemB))
+                
+                iteration += 1
                          
         tuple = ()      
                       
@@ -197,7 +203,7 @@ class Controller(object):
                     
             if moviment.selection_index == 0:
         
-                if moviment.moviment_direction[1] is not None:                    
+                if moviment.moviment_direction[1] is not None and self.game_state[moviment_index] != "":                    
                     secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
                     
                     self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
@@ -210,6 +216,11 @@ class Controller(object):
                 
                 if 0 <= row + row_sum <= 3 and 0 <= column + column_sum <= 3:
                     index_in_board = IndexCalculator.calculate(row + row_sum, column + column_sum)
+                    foward_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[0], moviment.selection_properties.board_index)
+
+                    if self.game_state[foward_moviment_index] != "":
+                        self.game_state[moviment_index] = self.game_state[foward_moviment_index]
+                        self.game_state[foward_moviment_index] = ""
 
                     if self.game_state[moviment_index] != "":
                         secondary_moviment_index = IndexCalculator.calculate_game_state(index_in_board, moviment.selection_properties.board_index)

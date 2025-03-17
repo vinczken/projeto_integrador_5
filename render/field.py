@@ -108,6 +108,20 @@ class Field(object):
                 
                     self.boards[blocked_board_index].blocked = False
                     
+                    if self.player_id == PlayerId.Player1 and index > 1:
+                        if index == 2:
+                            self.boards[3].blocked = False
+                        
+                        else:
+                            self.boards[2].blocked = False
+                            
+                    if self.player_id == PlayerId.Player2 and index < 2:
+                        if index == 0:
+                            self.boards[1].blocked = False
+                        
+                        else:
+                            self.boards[0].blocked = False
+                                        
                     return
                 
                 if len(self.selected_indexes) == 2:
@@ -126,7 +140,21 @@ class Field(object):
                 blocked_board_index = (index + 2) % 4
                 
                 self.boards[blocked_board_index].blocked = True
-                            
+                
+                if self.player_id == PlayerId.Player1 and index > 1:
+                    if index == 2:
+                        self.boards[3].blocked = True
+                    
+                    else:
+                        self.boards[2].blocked = True
+                        
+                if self.player_id == PlayerId.Player2 and index < 2:
+                    if index == 0:
+                        self.boards[1].blocked = True
+                    
+                    else:
+                        self.boards[0].blocked = True
+                                                
                 return
     
     
