@@ -3,14 +3,17 @@ from pygame import Surface
 from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
+from enuns.playerId import PlayerId
 
 class Controller(object):
     
     # O init da classe recebe o display geral, sendo ele a tela principal do jogo
     def __init__(self, display: Surface):                
         self.screen_width = display.get_width()
-        self.screen_height = display.get_height()
+        self.screen_height = display.get_height()        
         self.display = display
+        
+        self.player_id = PlayerId.Player1
         
         self.game_state = [
             "W","W","W","W",
@@ -145,7 +148,7 @@ class Controller(object):
         for i in range(len(tuples)):
             tuple = tuples[i]
             
-            if not tuple[0]:
+            if tuple[0] is None:
                 tuples[i] = None                
                 continue 
                                             
@@ -153,15 +156,15 @@ class Controller(object):
                 tuples[i] = None
                 continue
             
-            if tuple[1] and board_state[tuple[1]] == player_color:
+            if tuple[1] is not None and board_state[tuple[1]] == player_color:
                 tuples[i] = (tuple[0], None)                  
                 continue                    
                       
-            if tuple[1] and tuple[0] == enemy_color and tuple[1] == enemy_color:
+            if tuple[1] is not None and board_state[tuple[0]] == enemy_color and board_state[tuple[1]] == enemy_color:
                 tuples[i] = None
                 continue
         
-            if tuple[1] and tuple[1] == enemy_color:
+            if tuple[1] is not None and board_state[tuple[1]] == enemy_color:
                 row, column = IndexCalculator.calculate_row_column(tuple[1])
                 sum_row, sum_column = self.aux_positions[i]
                 
@@ -195,6 +198,8 @@ class Controller(object):
     def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties):
         
         moviments = [moviment_properties_A, moviment_properties_B]
+        
+        print(self.player_id)
         
         for moviment in moviments:            
                         
@@ -230,5 +235,11 @@ class Controller(object):
                 
             self.game_state[moviment_index] = self.game_state[selected_index]
             self.game_state[selected_index] = ""         
+                                                    
+        if self.player_id == PlayerId.Player1:
+            self.player_id = PlayerId.Player2
+        
+        else:
+            self.player_id = PlayerId.Player1                                                    
                                                                 
         return
