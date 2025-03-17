@@ -79,6 +79,12 @@ class Field(object):
         self.raw_moviments = []
         self.moviments = []
     
+        if self.player_id == PlayerId.Player1:
+            self.player_id = PlayerId.Player2
+        
+        else:
+            self.player_id = PlayerId.Player1
+    
         return
                             
     
@@ -107,7 +113,7 @@ class Field(object):
                 if len(self.selected_indexes) == 2:
                     moviment_index = self.boards[index].handle_moviment_click(mouse_position, self.player_id)
                 
-                    if moviment_index:
+                    if moviment_index != None:
                         self.handle_moviment(selected_index, moviment_index)
                         return 
             
@@ -116,7 +122,7 @@ class Field(object):
                 selected_square = self.boards[index].selected_square
 
                 self.selected_indexes.append(SelectionProperties(index, selected_square))
-                                
+
                 blocked_board_index = (index + 2) % 4
                 
                 self.boards[blocked_board_index].blocked = True
