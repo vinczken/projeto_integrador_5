@@ -46,7 +46,10 @@ class Controller(object):
             6: (3, 0),
             7: (3, 3),            
         }
-    
+
+        self.aux_positions_2 = {
+
+        }
 
     def handle_moves(self):
         boardA = self.field.selected_indexes[0].board_index
@@ -76,7 +79,7 @@ class Controller(object):
             move_B = boardB_moves[move_index]
                         
                                     
-            if move_A[0] and move_B[0]:
+            if move_A[0] is not None and move_B[0] is not None:
 
                 move_A_index_0 = IndexCalculator.calculate_game_state(move_A[0], boardA_index)
                 move_B_index_0 = IndexCalculator.calculate_game_state(move_B[0], boardB_index)                
@@ -87,7 +90,7 @@ class Controller(object):
                 else:
                     continue
                 
-            if move_A[1] and move_B[1]:
+            if move_A[1] is not None and move_B[1] is not None:
                 
                 move_A_index_0 = IndexCalculator.calculate_game_state(move_A[0], boardA_index)
                 move_B_index_0 = IndexCalculator.calculate_game_state(move_B[0], boardB_index)
@@ -122,7 +125,7 @@ class Controller(object):
         
         
         for row in range(-1, 2):             
-             for column in range(- 1, 2):                      
+            for column in range(- 1, 2):                      
                     
                 if row == 0 and column == 0:
                     continue    
@@ -164,18 +167,17 @@ class Controller(object):
                 tuples[i] = None
                 continue
         
-            if tuple[1] is not None and board_state[tuple[1]] == enemy_color:
+            if tuple[1] is not None and (board_state[tuple[0]] == enemy_color or board_state[tuple[1]] == enemy_color):
                 row, column = IndexCalculator.calculate_row_column(tuple[1])
                 sum_row, sum_column = self.aux_positions[i]
                 
-                if not 0 <= row + sum_row <= 3 or not 0 <= column + sum_column <= 3:
+                if not 0 <= row_square + sum_row <= 3 or not 0 <= column_square + sum_column <= 3:
                     continue 
                 
-                if 0 <= row + sum_row <= 3 and 0 <= column + sum_column <= 3:
-                    extra_position = IndexCalculator.calculate(row + sum_row, column + sum_column)
-
-                    if board_state[extra_position] == enemy_color:
-                        tuples[i] = (tuple[0], None)
+                extra_position = IndexCalculator.calculate(row_square + sum_row, column_square + sum_column)
+                
+                if board_state[extra_position] == enemy_color:                
+                    tuples[i] = (tuple[0], None)
                       
         print(tuples)
         
@@ -207,39 +209,60 @@ class Controller(object):
             moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[moviment.selection_index], moviment.selection_properties.board_index)
                     
             if moviment.selection_index == 0:
-        
-                if moviment.moviment_direction[1] is not None and self.game_state[moviment_index] != "":                    
-                    secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
+                                    
+                if self.game_state[moviment_index] != "":
+
+                    if moviment.moviment_direction[1] is not None:
+                        secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
                     
-                    self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
-                
+                        self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+
+                    else:
+                        final_vector = IndexCalculator.calculate_row_column(moviment.moviment_direction[moviment.selection_index])
+                        start_vector = IndexCalculator.calculate_row_column(moviment.selection_properties.square_index)
+                        variation = (final_vector[0] - start_vector[0], final_vector[1] - start_vector[1])
+
+                        secondary_vector = (final_vector[0] + variation[0], final_vector[1] + variation[1])
+
+                        if 0 <= secondary_vector[0] <= 3 and 0 <= secondary_vector[1] <= 3:
+                            secondary_moviment = IndexCalculator.calculate(secondary_vector[0], secondary_vector[1])
+                            secondary_moviment_index = IndexCalculator.calculate_game_state(secondary_moviment, moviment.selection_properties.board_index)
+                            
+                            self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+
             else:
                 
                 row, column = IndexCalculator.calculate_row_column(moviment.selection_properties.square_index)
                 
                 row_sum, column_sum = self.aux_positions[moviment.direction_index]
-                
-                if 0 <= row + row_sum <= 3 and 0 <= column + column_sum <= 3:
-                    index_in_board = IndexCalculator.calculate(row + row_sum, column + column_sum)
-                    foward_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[0], moviment.selection_properties.board_index)
+                foward_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[0], moviment.selection_properties.board_index)
 
+                if 0 <= row + row_sum <= 3 and 0 <= column + column_sum <= 3:
+                    index_in_board = IndexCalculator.calculate(row + row_sum, column + column_sum)                    
+                    
                     if self.game_state[foward_moviment_index] != "":
                         self.game_state[moviment_index] = self.game_state[foward_moviment_index]
                         self.game_state[foward_moviment_index] = ""
 
-                    if self.game_state[moviment_index] != "":
-                        secondary_moviment_index = IndexCalculator.calculate_game_state(index_in_board, moviment.selection_properties.board_index)
-                        
+                    if self.game_state[moviment_index] != "":            
+                        secondary_moviment_index = IndexCalculator.calculate_game_state(index_in_board, moviment.selection_properties.board_index)            
                         self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
                 
+                else:
+
+                    if self.game_state[foward_moviment_index] != "":
+                        self.game_state[moviment_index] = self.game_state[foward_moviment_index]
+                        self.game_state[foward_moviment_index] = ""                    
+
+
                 
             self.game_state[moviment_index] = self.game_state[selected_index]
             self.game_state[selected_index] = ""         
-                                                    
+    
         if self.player_id == PlayerId.Player1:
             self.player_id = PlayerId.Player2
         
         else:
             self.player_id = PlayerId.Player1                                                    
-                                                                
+
         return

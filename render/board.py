@@ -85,7 +85,7 @@ class Board(object):
 
     def handle_click(self, mouse_position, player_id: PlayerId):
         
-        if self.blocked:
+        if self.blocked or self.selected:
             return False
         
         if not GeneralUtils.verify_click((self.x_position, self.y_position), self.size, self.size, mouse_position):
