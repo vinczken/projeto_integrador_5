@@ -105,11 +105,23 @@ class Field(object):
                     self.selected_indexes = [obj for obj in self.selected_indexes if obj.board_index != index]
 
                     blocked_board_index = (index + 2) % 4
+
+                    next_to_blocked_board_index = (index + 3) % 4
                 
-                    self.boards[blocked_board_index].blocked = False
+                    #if not self.boards[next_to_blocked_board_index].selected: 
+                    
+                    if len(self.selected_indexes) > 0:
+                        still_selected_board = self.selected_indexes[0].selected_board
+                        if still_selected_board < 2:
+                            
+                        else:
+                            
+                    else:
+                        self.boards[blocked_board_index].blocked = False
+                        
                     
                     if self.player_id == PlayerId.Player1 and index > 1:
-                        if index == 2:
+                        if index == 2 and self.boards[1].selected == False:
                             self.boards[3].blocked = False
                         
                         else:
