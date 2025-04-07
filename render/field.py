@@ -94,7 +94,6 @@ class Field(object):
             return
             
         for index in range(4):
-            
             if (selected_index := next((obj for obj in self.selected_indexes if obj.board_index == index), None)):
                 
                 if self.boards[index].handle_selected_click(mouse_position):
@@ -105,23 +104,45 @@ class Field(object):
                     self.selected_indexes = [obj for obj in self.selected_indexes if obj.board_index != index]
 
                     blocked_board_index = (index + 2) % 4
-                
-                    self.boards[blocked_board_index].blocked = False
                     
-                    if self.player_id == PlayerId.Player1 and index > 1:
-                        if index == 2:
-                            self.boards[3].blocked = False
-                        
+                    if blocked_board_index % 2 == 0:
+                        next_to_blocked_board_index = (index + 3) % 4
+                    else:
+                        next_to_blocked_board_index = (index + 1) % 4
+                
+                    print(f"\ni: {index}, b: {blocked_board_index}, n: {next_to_blocked_board_index}\n")
+                    
+                    if self.player_id == PlayerId.Player1:
+                        if index > 1:
+                            self.boards[blocked_board_index].blocked = False
+                            if index == 2:
+                                if (len(self.selected_indexes) == 0) or (self.selected_indexes[0].board_index != 1):
+                                    self.boards[3].blocked = False
+                                    print(f"o que foi desbloqueado board: {blocked_board_index}, {3}, id: {self.player_id}\n")
+                            else:
+                                if (len(self.selected_indexes) == 0) or (self.selected_indexes[0].board_index != 0):
+                                    self.boards[2].blocked = False
+                                    print(f"o que foi desbloqueado board: {blocked_board_index}, {2}, id: {self.player_id}\n")
                         else:
-                            self.boards[2].blocked = False
-                            
-                    if self.player_id == PlayerId.Player2 and index < 2:
-                        if index == 0:
-                            self.boards[1].blocked = False
-                        
+                            if not any(obj.board_index == next_to_blocked_board_index for obj in self.selected_indexes):
+                                self.boards[blocked_board_index].blocked = False
+                                print(f"o que foi desbloqueado board: {blocked_board_index}, id: {self.player_id}\n")
+
+                    if self.player_id == PlayerId.Player2:
+                        if index < 2:
+                            self.boards[blocked_board_index].blocked = False
+                            if index == 0:
+                                if (len(self.selected_indexes) == 0) or (self.selected_indexes[0].board_index != 3):
+                                    self.boards[1].blocked = False
+                                    print(f"o que foi desbloqueado board: {blocked_board_index}, {1}, id: {self.player_id}\n")
+                            else:
+                                if (len(self.selected_indexes) == 0) or (self.selected_indexes[0].board_index != 2):
+                                    self.boards[0].blocked = False
+                                    print(f"o que foi desbloqueado board: {blocked_board_index}, {0}, id: {self.player_id}\n")
                         else:
-                            self.boards[0].blocked = False
-                                        
+                            if not any(obj.board_index == next_to_blocked_board_index for obj in self.selected_indexes):
+                                self.boards[blocked_board_index].blocked = False
+                                print(f"o que foi desbloqueado board: {blocked_board_index}, id: {self.player_id}\n")
                     return
                 
                 if len(self.selected_indexes) == 2:
