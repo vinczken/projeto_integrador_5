@@ -1,0 +1,35 @@
+Planejamento de implementação das escolhas feitas pela máquina
+
+- Os jogadores devem ser demarcados entre humanos ou IA 
+- Caso seja a vez da IA, será verificado quais são as posições ou casas disponíveis para escolha
+- Uma posição aleatória será escolhida, após isso as escolhas disponíveis mudam e será possivel
+    escolher apenas casas que estejam disponíveis pelas regras
+- Uma dessas casas então será escolhida e então, a partir dessas duas escolhas, serão gerados seus 
+    movimentos possíveis, tais movimentos possiveis serão utilizados para calcular o mínimo e o máximo
+- Seguirá o fluxo:
+        - A máquina escolhera duas casas aleatórias
+        - Serão geradas os movimentos possiveis para aquelas duas casas
+        - Cada um dos movimentos será feito para poder calcular sua utilidade
+        - Tais resultados serão armazenados e outras duas casas serão selecionadas, sendo que
+            aquele conjunto anterior não poderá ser escolhido novamente
+        - Tal ação será repetida até que nenhum conjunto de casas esteja disponível para escolha
+
+- O formato das peças escolhidas será -> (Tupla com as peças), resultado da função utilidade
+
+- Para a função utilidade:
+    - Será uma soma
+    - Cada peça do agente atual que pode ser movida por uma peça adversária contabilizará -1 ponto,
+        tais peças serão contabilizadas mais de uma vez para cada peça adversária que pode movimenta-la
+    - E, Caso esse movimento adversário pode derrubar a peça atual, será contabilizado -2 pontos
+    - Cada tabela poderá gerar um valor caso tenha mais ou menos peças que o adversário
+    - Cada peça do agente atual que estiver ao redor de outra será contabilizada como +1 ponto,
+        será feito pela peça estar protegida
+    - Cada peça que pode ser movimentada do adversário será contabilizada +1 ponto
+    - E, caso tal movimento derrube a peça adversária, então será contabilizada +2 pontos
+    - Tais somas serão contabilizadas das peças dos dois tabuleiros que foram movimentadas
+
+    
+
+
+
+
