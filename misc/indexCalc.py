@@ -14,3 +14,7 @@ class IndexCalculator:
     @staticmethod     
     def calculate_game_state(index, board_index):
         return (board_index * 16) + index
+    
+    @staticmethod
+    def calculate_table(index):
+        return floor(index / 16)

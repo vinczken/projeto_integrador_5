@@ -28,8 +28,15 @@ Planejamento de implementação das escolhas feitas pela máquina
     - E, caso tal movimento derrube a peça adversária, então será contabilizada +2 pontos
     - Tais somas serão contabilizadas das peças dos dois tabuleiros que foram movimentadas
 
-    
 
+- Bloqueios das peças secundárias:
 
+    - Não pode ser da mesma tabela
+    - Não pode ser de uma tabela com a mesma cor
+    - Não pode ser de uma outra tabela do adversário, caso o primeiro seja
+    - Caso o primeiro movimente uma peça do adversário, o segundo não deve movimentar
 
+- Tabelas:
 
+    0 1  -> Player 1
+    2 3  -> Player 2

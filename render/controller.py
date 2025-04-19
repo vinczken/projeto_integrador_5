@@ -4,6 +4,7 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
+import random
 
 class Controller(object):
     
@@ -185,7 +186,10 @@ class Controller(object):
     
     
     def draw(self):
-        self.field.draw()        
+        self.field.draw()   
+
+        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
+
         return
     
     
@@ -266,3 +270,81 @@ class Controller(object):
             self.player_id = PlayerId.Player1                                                    
 
         return
+    
+    def find_secondary_indexes(self, indexes, selected_index):
+
+        selected_table = IndexCalculator.calculate_table(selected_index)
+
+        possible_indexes = [i for i in indexes if IndexCalculator.calculate_table(i) != selected_table]
+
+        same_color_table = (selected_table + 2) % 4
+
+        possible_indexes = [
+                            i for i in possible_indexes 
+                            if IndexCalculator.calculate_table(i) != same_color_table
+                            ]
+
+        if self.player_id == PlayerId.Player1 and selected_table >= 2:
+
+            blocked_table = 2
+
+            if selected_table == 2:
+                blocked_table = 3
+
+            possible_indexes = [
+                                i for i in possible_indexes 
+                                if IndexCalculator.calculate_table(i) != blocked_table
+                                ]
+            
+        if self.player_id == PlayerId.Player2 and selected_table <= 1:
+
+            blocked_table = 0
+
+            if selected_table == 0:
+                blocked_table = 1
+            
+            possible_indexes = [
+                                i for i in possible_indexes 
+                                if IndexCalculator.calculate_table(i) != blocked_table
+                                ]
+            
+        return possible_indexes
+
+    def generate_moviments(self):
+        
+        searched_piece = 'W'
+
+        if self.player_id == PlayerId.Player2:
+            searched_piece = 'B'
+
+        indexes = [i for i, item in enumerate(self.game_state) if item == searched_piece]
+
+        first_index = random.choice(indexes)
+
+        first_index_board = IndexCalculator.calculate_table(first_index)
+
+        first_index_board_state = self.game_state[(16 * first_index_board) : (16 * (first_index_board + 1))]
+
+        first_index_in_board = first_index % 16
+
+        valid_first_moviments = self.calculate_valid_moves(first_index_in_board, first_index_board_state)
+
+        secondary_moviments = self.find_secondary_indexes(indexes, first_index)
+
+        for secondary_moviment in secondary_moviments:
+
+            second_index_board = IndexCalculator.calculate_table(secondary_moviment)
+
+            second_index_board_state = self.game_state[(16 * second_index_board) : (16 * (second_index_board + 1))]
+
+            second_index_in_board = secondary_moviment % 16
+
+            valid_secondary_moviments = self.calculate_valid_moves(second_index_in_board, second_index_board_state)
+
+            possible_moviments = self.merge_moves(
+                    first_index_board, 
+                    valid_first_moviments, 
+                    second_index_board, 
+                    valid_secondary_moviments
+                )
+        pass
