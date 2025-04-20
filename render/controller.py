@@ -4,6 +4,7 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
+from misc.iaMovimentProperties import IaMovimentProperties
 import random
 
 class Controller(object):
@@ -180,7 +181,7 @@ class Controller(object):
                 if board_state[extra_position] == enemy_color:                
                     tuples[i] = (tuple[0], None)
                       
-        print(tuples)
+        # print(tuples)
         
         return tuples
     
@@ -189,6 +190,17 @@ class Controller(object):
         self.field.draw()   
 
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
+        
+        if self.player_id == PlayerId.Player2:            
+            moviments = self.generate_moviments()
+
+            print("\n\n")
+            print("---- Imprimindo resultado da geração: \n")
+
+            for item in moviments:
+                print(item)
+
+            self.player_id = PlayerId.Player1
 
         return
     
@@ -205,7 +217,7 @@ class Controller(object):
         
         moviments = [moviment_properties_A, moviment_properties_B]
         
-        print(self.player_id)
+        # print(self.player_id)
         
         for moviment in moviments:            
                         
@@ -310,7 +322,11 @@ class Controller(object):
             
         return possible_indexes
 
+
     def generate_moviments(self):
+        
+        visited_indexes = []
+        ia_moviments = []
         
         searched_piece = 'W'
 
@@ -319,32 +335,50 @@ class Controller(object):
 
         indexes = [i for i, item in enumerate(self.game_state) if item == searched_piece]
 
-        first_index = random.choice(indexes)
 
-        first_index_board = IndexCalculator.calculate_table(first_index)
+        for i in indexes:
+            first_index = i
 
-        first_index_board_state = self.game_state[(16 * first_index_board) : (16 * (first_index_board + 1))]
+            secondary_indexes = self.find_secondary_indexes(indexes, first_index)
+            
+            tmp_visited = set([i[0] for i in visited_indexes])
+            
+            secondary_indexes = [item for item in secondary_indexes if item not in tmp_visited]
+            
+            if len(secondary_indexes) == 0:
+                continue
+            
+            first_index_board = IndexCalculator.calculate_table(first_index)
 
-        first_index_in_board = first_index % 16
+            first_index_board_state = self.game_state[(16 * first_index_board) : (16 * (first_index_board + 1))]
 
-        valid_first_moviments = self.calculate_valid_moves(first_index_in_board, first_index_board_state)
+            first_index_in_board = first_index % 16
 
-        secondary_moviments = self.find_secondary_indexes(indexes, first_index)
+            valid_first_moviments = self.calculate_valid_moves(first_index_in_board, first_index_board_state)
 
-        for secondary_moviment in secondary_moviments:
 
-            second_index_board = IndexCalculator.calculate_table(secondary_moviment)
+            for secondary_index in secondary_indexes:
+                
+                second_index_board = IndexCalculator.calculate_table(secondary_index)
 
-            second_index_board_state = self.game_state[(16 * second_index_board) : (16 * (second_index_board + 1))]
+                second_index_board_state = self.game_state[(16 * second_index_board) : (16 * (second_index_board + 1))]
 
-            second_index_in_board = secondary_moviment % 16
+                second_index_in_board = secondary_index % 16
 
-            valid_secondary_moviments = self.calculate_valid_moves(second_index_in_board, second_index_board_state)
+                valid_secondary_moviments = self.calculate_valid_moves(second_index_in_board, second_index_board_state)
 
-            possible_moviments = self.merge_moves(
-                    first_index_board, 
-                    valid_first_moviments, 
-                    second_index_board, 
-                    valid_secondary_moviments
-                )
-        pass
+                possible_moviments = self.merge_moves(
+                        first_index_board, 
+                        valid_first_moviments, 
+                        second_index_board, 
+                        valid_secondary_moviments
+                    )
+                
+                visited_indexes.append((first_index, secondary_index))
+                ia_moviments.append(IaMovimentProperties((first_index, secondary_index), possible_moviments, valid_first_moviments, valid_secondary_moviments))
+        
+        
+        
+        
+        
+        return ia_moviments
