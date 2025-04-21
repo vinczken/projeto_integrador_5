@@ -1,8 +1,8 @@
-from selectionProperties import SelectionProperties
-from movimentProperties import MovimentProperties
-from iaMovimentProperties import IaMovimentProperties
+from misc.selectionProperties import SelectionProperties
+from misc.movimentProperties import MovimentProperties
+from misc.iaMovimentProperties import IaMovimentProperties
 from enuns.playerId import PlayerId
-from indexCalc import IndexCalculator
+from misc.indexCalc import IndexCalculator
 
 class IaMoviment:
 
@@ -17,10 +17,11 @@ class IaMoviment:
         self.moviment_b = moviment_b
         self.game_state = game_state
         self.player_id = player_id
+        self.utility = 0
         
         
     @staticmethod
-    def generate_ia_moviments(moviments_properties: list[IaMovimentProperties], player_id: PlayerId):
+    def generate_ia_moviments(moviments_properties: list[IaMovimentProperties], player_id: PlayerId) -> dict[tuple, list["IaMoviment"]]:
         
         ia_moviments: dict[tuple, list[IaMoviment]] = {}
         
@@ -74,8 +75,11 @@ class IaMoviment:
                 else:                    
                     ia_moviments[moviment_key] = [IaMoviment(moviment_a, moviment_b, [], player_id)]
                 
+        
+        return ia_moviments
+    
                 
-    def utility(self) -> int:
+    def utility_calculator(self) -> int:
         
         player_piece = 'W'
         enemy_piece = 'B'
@@ -98,11 +102,13 @@ class IaMoviment:
             
             # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
             if player_piece not in board:
-                return -1000
+                self.utility_calculator = -1000
+                return self.utility
             
             # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
-                return 1000
+                self.utility_calculator = 1000
+                return self.utility
             
             for piece_index in range(len(board)):
                 
@@ -113,7 +119,7 @@ class IaMoviment:
                 
                 piece_row, piece_column = IndexCalculator.calculate_row_column(piece_index)
 
-                for direction in direction(8):
+                for direction in range(8):
                     
                     distance_1 = piece_row + IaMoviment.distances[0][direction][0], piece_column + IaMoviment.distances[0][direction][1]
                     distance_2 = piece_row + IaMoviment.distances[1][direction][0], piece_column + IaMoviment.distances[1][direction][1]
@@ -199,5 +205,5 @@ class IaMoviment:
                             # cenários: X _ 0 X ou X _ 0 0
                             # não é possivel mover a peça assim, nem contabilizar pontos...
             
-                    
-        return player_sum - enemy_sum          
+        self.utility = player_sum - enemy_sum
+        return self.utility

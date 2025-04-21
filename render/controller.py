@@ -5,7 +5,9 @@ from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
 from misc.iaMovimentProperties import IaMovimentProperties
+from misc.iaMoviment import IaMoviment
 import random
+import copy
 
 class Controller(object):
     
@@ -196,9 +198,20 @@ class Controller(object):
 
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
+            
 
             for item in moviments:
                 print(item)
+                
+                for moviment in moviments[item]:
+                    print(moviment.moviment_a)
+                    print(moviment.moviment_b)
+                    print(moviment.game_state[0:16])
+                    print(moviment.game_state[16:32])
+                    print(moviment.game_state[32:48])
+                    print(moviment.game_state[48:64])            
+                    print("Utilidade -> ", moviment.utility)    
+                print("\n")
 
             self.player_id = PlayerId.Player1
 
@@ -213,9 +226,12 @@ class Controller(object):
 
         return
     
-    def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties):
+    def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties, game_state: list = None):
         
         moviments = [moviment_properties_A, moviment_properties_B]
+        
+        if game_state is None:
+            game_state = self.game_state
         
         # print(self.player_id)
         
@@ -226,12 +242,12 @@ class Controller(object):
                     
             if moviment.selection_index == 0:
                                     
-                if self.game_state[moviment_index] != "":
+                if game_state[moviment_index] != "":
 
                     if moviment.moviment_direction[1] is not None:
                         secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
                     
-                        self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+                        game_state[secondary_moviment_index] = game_state[moviment_index]
 
                     else:
                         final_vector = IndexCalculator.calculate_row_column(moviment.moviment_direction[moviment.selection_index])
@@ -244,7 +260,7 @@ class Controller(object):
                             secondary_moviment = IndexCalculator.calculate(secondary_vector[0], secondary_vector[1])
                             secondary_moviment_index = IndexCalculator.calculate_game_state(secondary_moviment, moviment.selection_properties.board_index)
                             
-                            self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+                            game_state[secondary_moviment_index] = game_state[moviment_index]
 
             else:
                 
@@ -256,30 +272,31 @@ class Controller(object):
                 if 0 <= row + row_sum <= 3 and 0 <= column + column_sum <= 3:
                     index_in_board = IndexCalculator.calculate(row + row_sum, column + column_sum)                    
                     
-                    if self.game_state[foward_moviment_index] != "":
-                        self.game_state[moviment_index] = self.game_state[foward_moviment_index]
-                        self.game_state[foward_moviment_index] = ""
+                    if game_state[foward_moviment_index] != "":
+                        game_state[moviment_index] = game_state[foward_moviment_index]
+                        game_state[foward_moviment_index] = ""
 
-                    if self.game_state[moviment_index] != "":            
+                    if game_state[moviment_index] != "":            
                         secondary_moviment_index = IndexCalculator.calculate_game_state(index_in_board, moviment.selection_properties.board_index)            
-                        self.game_state[secondary_moviment_index] = self.game_state[moviment_index]
+                        game_state[secondary_moviment_index] = game_state[moviment_index]
                 
                 else:
 
-                    if self.game_state[foward_moviment_index] != "":
-                        self.game_state[moviment_index] = self.game_state[foward_moviment_index]
-                        self.game_state[foward_moviment_index] = ""                    
+                    if game_state[foward_moviment_index] != "":
+                        game_state[moviment_index] = game_state[foward_moviment_index]
+                        game_state[foward_moviment_index] = ""                    
 
 
                 
-            self.game_state[moviment_index] = self.game_state[selected_index]
-            self.game_state[selected_index] = ""         
+            game_state[moviment_index] = game_state[selected_index]
+            game_state[selected_index] = ""         
     
-        if self.player_id == PlayerId.Player1:
-            self.player_id = PlayerId.Player2
-        
-        else:
-            self.player_id = PlayerId.Player1                                                    
+        if game_state == self.game_state:
+            if self.player_id == PlayerId.Player1:
+                self.player_id = PlayerId.Player2
+            
+            else:
+                self.player_id = PlayerId.Player1                                                    
 
         return
     
@@ -323,7 +340,7 @@ class Controller(object):
         return possible_indexes
 
 
-    def generate_moviments(self):
+    def generate_moviments(self) -> dict[tuple, list[IaMoviment]]:
         
         visited_indexes = []
         ia_moviments = []
@@ -377,8 +394,16 @@ class Controller(object):
                 visited_indexes.append((first_index, secondary_index))
                 ia_moviments.append(IaMovimentProperties((first_index, secondary_index), possible_moviments, valid_first_moviments, valid_secondary_moviments))
         
+        generated_moviments = IaMoviment.generate_ia_moviments(ia_moviments, self.player_id)
         
+        for item in generated_moviments:
+            generated_mov_list = generated_moviments[item]
+
+            for moviment in generated_mov_list:
+                moviment.game_state = copy.deepcopy(self.game_state)
+                
+                self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
+                
+                #moviment.utility_calculator()
         
-        
-        
-        return ia_moviments
+        return generated_moviments
