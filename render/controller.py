@@ -404,8 +404,7 @@ class Controller(object):
         
         return generated_moviments
     
-    
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alfa = IaMoviment(float('+inf')), beta = IaMoviment(float('-inf'))) -> IaMoviment:
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alpha = float('-inf'), beta = float('inf') ) -> IaMoviment:
         if game_state is None:
             game_state = self.game_state
         
@@ -414,17 +413,14 @@ class Controller(object):
         
         turns = turns - 1
         
-        print(f"entrei no minimax, {turns}")
-        if alfa:
-            print(f"{alfa.utility}")
-        
-        if beta:
-            print(f"{beta.utility}")
+        print(f"entrei no minimax, {turns}, {max_turn}")
+        print(f"alfa: {alpha}, beta: {beta}")
+        #print(f"jogada: {move.utility}")
         
         moviments = self.generate_moviments(game_state, player_id)
         
         if turns == 0:
-            
+            print("turn 0")
             moviment_list: list[IaMoviment] = []
             
             for moviment_tuple in moviments:
@@ -437,38 +433,43 @@ class Controller(object):
                 
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
-            if max_turn:
-                if   alfa.utility == float('+inf') or moviment_list[0].utility > alfa.utility:
-                    return  moviment_list[0]
-                else:
-                    return alfa
-            else:
-                if  beta.utility == float('-inf') or moviment_list[0].utility < beta.utility:
-                    return  moviment_list[0]
-                else:
-                    return beta
-        
-        new_player_id = PlayerId.Player1
-        
-        if player_id == PlayerId.Player1:
-            new_player_id = PlayerId.Player2
-        
-        for moviment_tuple in moviments:
-            moviment_list_tmp = moviments[moviment_tuple]
+            if not moviment_list:
+                return IaMoviment(utility=alpha if max_turn else beta)
             
-            for moviment in moviment_list_tmp:
-                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alfa, beta)
-                
-                if not max_turn:
-                    if  alfa.utility == float('+inf') or new_moviment.utility > alfa.utility:
-                        alfa = new_moviment
-                else:
-                    if beta.utility == float('-inf') or new_moviment.utility < beta.utility:
-                        beta = new_moviment
-                if alfa.utility >= beta.utility:
-                    break
-        
-        if max_turn:
-            return alfa
+            return moviment_list[0]
         else:
-            return beta
+            new_player_id = PlayerId.Player1
+            
+            if player_id == PlayerId.Player1:
+                new_player_id = PlayerId.Player2
+            
+            best_move = None
+            
+            for moviment_tuple in moviments:
+                moviment_list_tmp = moviments[moviment_tuple]
+                
+                for moviment in moviment_list_tmp:
+                    
+                    new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alpha, beta)
+                    print(f"\tsai do minimax, {turns}, {max_turn}")
+                    #print(f"\tjogada: {move.utility}")
+                    print(f"\tNM: {new_moviment.utility}")
+                    
+                    if max_turn:
+                        if alpha < new_moviment.utility:
+                            print("alfa trocado")
+                            alpha = new_moviment.utility
+                            best_move = new_moviment
+                    else:
+                        if beta > new_moviment.utility:
+                            print("beta trocado")
+                            beta = new_moviment.utility
+                            best_move = new_moviment
+                    
+                    print(f"\talfa: {alpha}, beta: {beta}")
+                    
+                    if alpha >= beta:
+                        print("Saiu")
+                        break
+            
+            return best_move

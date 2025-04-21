@@ -12,16 +12,13 @@ class IaMoviment:
         IndexCalculator.aux_positions(3)        
     ]
 
-    def __init__(self, moviment_a: MovimentProperties, moviment_b: MovimentProperties, game_state, player_id: PlayerId):
+    def __init__(self, moviment_a: MovimentProperties = None, moviment_b: MovimentProperties = None, game_state = None, player_id: PlayerId = None, utility: int = 0):
         self.moviment_a = moviment_a
         self.moviment_b = moviment_b
         self.game_state = game_state
         self.player_id = player_id
-        self.utility = 0
-    
-    def __init__(self, utility):
         self.utility = utility
-        
+    
         
         
     @staticmethod
