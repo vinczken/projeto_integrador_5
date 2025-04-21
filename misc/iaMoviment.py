@@ -102,12 +102,12 @@ class IaMoviment:
             
             # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
             if player_piece not in board:
-                self.utility_calculator = -1000
+                self.utility = -1000
                 return self.utility
             
             # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
-                self.utility_calculator = 1000
+                self.utility = 1000
                 return self.utility
             
             for piece_index in range(len(board)):

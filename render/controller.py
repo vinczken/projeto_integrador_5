@@ -404,8 +404,7 @@ class Controller(object):
         return generated_moviments
     
     
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3) -> IaMoviment:
-            
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 15, alfa = None, beta = None) -> IaMoviment:
         if game_state is None:
             game_state = self.game_state
         
@@ -413,6 +412,7 @@ class Controller(object):
             player_id = self.player_id    
         
         turns = turns - 1
+        print(f"entrei no minimax, {turns}")
         
         moviments = self.generate_moviments(game_state, player_id)
         
@@ -425,29 +425,39 @@ class Controller(object):
                 
                 for moviment in moviment_list_tmp:
                     moviment.utility_calculator()
-
+                    
                 moviment_list.extend(moviment_list_tmp)
                 
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
-            return moviment_list[0]
+            if max_turn:
+                if   alfa == None or moviment_list[0].utility > alfa.utility:
+                    return  moviment_list[0]
+                else:
+                    return alfa
+            else:
+                if  beta == None or moviment_list[0].utility < beta:
+                    return  moviment_list[0]
+                else:
+                    return beta
         
         new_player_id = PlayerId.Player1
         
         if player_id == PlayerId.Player1:
             new_player_id = PlayerId.Player2
         
-        generated_moviments: list[IaMoviment] = []
-        
         for moviment_tuple in moviments:
             moviment_list_tmp = moviments[moviment_tuple]
             
             for moviment in moviment_list_tmp:
-                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns)
-
-                generated_moviments.append(new_moviment)
-                
-        print(len(generated_moviments))
-        generated_moviments.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
-        
-        return generated_moviments[0]
+                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alfa, beta)
+                if not max_turn:
+                    if  alfa == None or new_moviment.utility > alfa.utility:
+                        return new_moviment
+                    else:
+                        return alfa
+                else:
+                    if beta == None or new_moviment < beta:
+                        return new_moviment
+                    else:
+                        return beta
