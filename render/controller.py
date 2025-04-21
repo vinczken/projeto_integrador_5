@@ -152,9 +152,9 @@ class Controller(object):
                 tuples.append((itemA, itemB))
                 
                 iteration += 1
-                         
+                        
         tuple = ()      
-                      
+                    
         for i in range(len(tuples)):
             tuple = tuples[i]
             
@@ -169,7 +169,7 @@ class Controller(object):
             if tuple[1] is not None and board_state[tuple[1]] == player_color:
                 tuples[i] = (tuple[0], None)                  
                 continue                    
-                      
+                    
             if tuple[1] is not None and board_state[tuple[0]] == enemy_color and board_state[tuple[1]] == enemy_color:
                 tuples[i] = None
                 continue
@@ -195,14 +195,23 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax()
+            moviment = self.generate_minimax(turns=1)
+
+            board_a = moviment.moviment_a.selection_properties.board_index
+            board_b = moviment.moviment_b.selection_properties.board_index
 
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
             
             print(moviment)
 
+            self.update_game_state(moviment.moviment_a, moviment.moviment_b)
+            
+            self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
+            self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
+            
             self.player_id = PlayerId.Player1
+            self.field.player_id = PlayerId.Player1
 
         return
     
@@ -396,9 +405,7 @@ class Controller(object):
     
     
     def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3) -> IaMoviment:
-        
-        print(f"entrei no minimax, {turns}")
-        
+            
         if game_state is None:
             game_state = self.game_state
         
@@ -410,6 +417,7 @@ class Controller(object):
         moviments = self.generate_moviments(game_state, player_id)
         
         if turns == 0:
+            
             moviment_list: list[IaMoviment] = []
             
             for moviment_tuple in moviments:

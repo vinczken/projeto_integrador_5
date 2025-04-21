@@ -163,15 +163,20 @@ class IaMoviment:
                             continue
                         
                         # Somado 6 porque a peça pode ser movida ou empurrada do tabuleiro;
-                        # O cenario eh: _ X 0 _
+                        # O cenario eh: _ X 0 _                                            
                         if board[distance_2_index] == '':
-                            if piece == player_piece:
-                                player_sum += 6
                             
-                            else:
-                                enemy_sum += 6
+                            if distance_3_index == -1:                                
+                                if piece == player_piece:
+                                    player_sum += 6
                                 
-                            continue
+                                else:
+                                    enemy_sum += 6
+                                    
+                            # O cenario é: _ X 0 X ou _ X 0 0
+                            # Para o cenário, não possui caso
+                            
+                            continue                            
                     
                     if board[distance_1_index] == '':
                         
@@ -206,4 +211,5 @@ class IaMoviment:
                             # não é possivel mover a peça assim, nem contabilizar pontos...
             
         self.utility = player_sum - enemy_sum
+        
         return self.utility
