@@ -70,9 +70,12 @@ class Controller(object):
         self.field.set_moviments(moviments, [boardA_moves, boardB_moves])
         
         
-    def merge_moves(self, boardA_index, boardA_moves, boardB_index, boardB_moves):
+    def merge_moves(self, boardA_index, boardA_moves, boardB_index, boardB_moves, game_state: list = None):
         
         moviments = []
+        
+        if game_state == None:
+            game_state = self.game_state
         
         for move_index in range(8):
             
@@ -88,7 +91,7 @@ class Controller(object):
                 move_A_index_0 = IndexCalculator.calculate_game_state(move_A[0], boardA_index)
                 move_B_index_0 = IndexCalculator.calculate_game_state(move_B[0], boardB_index)                
                 
-                if not (self.game_state[move_A_index_0] != "" and self.game_state[move_A_index_0] == self.game_state[move_B_index_0]):    
+                if not (game_state[move_A_index_0] != "" and game_state[move_A_index_0] == game_state[move_B_index_0]):    
                     moviments.append((move_A[0], move_B[0]))
  
                 else:
@@ -101,12 +104,12 @@ class Controller(object):
                 move_A_index_1 = IndexCalculator.calculate_game_state(move_A[1], boardA_index)
                 move_B_index_1 = IndexCalculator.calculate_game_state(move_B[1], boardB_index)
             
-                if not (self.game_state[move_A_index_1] != "" and self.game_state[move_A_index_1] == self.game_state[move_B_index_1]):
+                if not (game_state[move_A_index_1] != "" and game_state[move_A_index_1] == game_state[move_B_index_1]):
                     
-                    if self.game_state[move_A_index_0] != "" and self.game_state[move_A_index_0] == self.game_state[move_B_index_1]:                
+                    if game_state[move_A_index_0] != "" and game_state[move_A_index_0] == game_state[move_B_index_1]:                
                         continue
                     
-                    if self.game_state[move_B_index_0] != "" and self.game_state[move_B_index_0] == self.game_state[move_A_index_1]:
+                    if game_state[move_B_index_0] != "" and game_state[move_B_index_0] == game_state[move_A_index_1]:
                         continue
                     
                     moviments.append((move_A[1], move_B[1]))
@@ -182,8 +185,6 @@ class Controller(object):
                 
                 if board_state[extra_position] == enemy_color:                
                     tuples[i] = (tuple[0], None)
-                      
-        # print(tuples)
         
         return tuples
     
@@ -194,24 +195,12 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviments = self.generate_moviments()
+            moviment = self.generate_minimax()
 
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
             
-
-            for item in moviments:
-                print(item)
-                
-                for moviment in moviments[item]:
-                    print(moviment.moviment_a)
-                    print(moviment.moviment_b)
-                    print(moviment.game_state[0:16])
-                    print(moviment.game_state[16:32])
-                    print(moviment.game_state[32:48])
-                    print(moviment.game_state[48:64])            
-                    print("Utilidade -> ", moviment.utility)    
-                print("\n")
+            print(moviment)
 
             self.player_id = PlayerId.Player1
 
@@ -232,9 +221,7 @@ class Controller(object):
         
         if game_state is None:
             game_state = self.game_state
-        
-        # print(self.player_id)
-        
+
         for moviment in moviments:            
                         
             selected_index = IndexCalculator.calculate_game_state(moviment.selection_properties.square_index, moviment.selection_properties.board_index)
@@ -300,7 +287,7 @@ class Controller(object):
 
         return
     
-    def find_secondary_indexes(self, indexes, selected_index):
+    def find_secondary_indexes(self, indexes, selected_index, player_id: PlayerId):
 
         selected_table = IndexCalculator.calculate_table(selected_index)
 
@@ -313,7 +300,7 @@ class Controller(object):
                             if IndexCalculator.calculate_table(i) != same_color_table
                             ]
 
-        if self.player_id == PlayerId.Player1 and selected_table >= 2:
+        if player_id == PlayerId.Player1 and selected_table >= 2:
 
             blocked_table = 2
 
@@ -325,7 +312,7 @@ class Controller(object):
                                 if IndexCalculator.calculate_table(i) != blocked_table
                                 ]
             
-        if self.player_id == PlayerId.Player2 and selected_table <= 1:
+        if player_id == PlayerId.Player2 and selected_table <= 1:
 
             blocked_table = 0
 
@@ -340,23 +327,23 @@ class Controller(object):
         return possible_indexes
 
 
-    def generate_moviments(self) -> dict[tuple, list[IaMoviment]]:
+    def generate_moviments(self, game_state: list, player_id: PlayerId) -> dict[tuple, list[IaMoviment]]:
         
         visited_indexes = []
         ia_moviments = []
         
         searched_piece = 'W'
 
-        if self.player_id == PlayerId.Player2:
+        if player_id == PlayerId.Player2:
             searched_piece = 'B'
 
-        indexes = [i for i, item in enumerate(self.game_state) if item == searched_piece]
+        indexes = [i for i, item in enumerate(game_state) if item == searched_piece]
 
 
         for i in indexes:
             first_index = i
 
-            secondary_indexes = self.find_secondary_indexes(indexes, first_index)
+            secondary_indexes = self.find_secondary_indexes(indexes, first_index, player_id)
             
             tmp_visited = set([i[0] for i in visited_indexes])
             
@@ -367,7 +354,7 @@ class Controller(object):
             
             first_index_board = IndexCalculator.calculate_table(first_index)
 
-            first_index_board_state = self.game_state[(16 * first_index_board) : (16 * (first_index_board + 1))]
+            first_index_board_state = game_state[(16 * first_index_board) : (16 * (first_index_board + 1))]
 
             first_index_in_board = first_index % 16
 
@@ -378,7 +365,7 @@ class Controller(object):
                 
                 second_index_board = IndexCalculator.calculate_table(secondary_index)
 
-                second_index_board_state = self.game_state[(16 * second_index_board) : (16 * (second_index_board + 1))]
+                second_index_board_state = game_state[(16 * second_index_board) : (16 * (second_index_board + 1))]
 
                 second_index_in_board = secondary_index % 16
 
@@ -388,22 +375,71 @@ class Controller(object):
                         first_index_board, 
                         valid_first_moviments, 
                         second_index_board, 
-                        valid_secondary_moviments
+                        valid_secondary_moviments,
+                        game_state
                     )
                 
                 visited_indexes.append((first_index, secondary_index))
                 ia_moviments.append(IaMovimentProperties((first_index, secondary_index), possible_moviments, valid_first_moviments, valid_secondary_moviments))
         
-        generated_moviments = IaMoviment.generate_ia_moviments(ia_moviments, self.player_id)
+        generated_moviments = IaMoviment.generate_ia_moviments(ia_moviments, player_id)
         
         for item in generated_moviments:
             generated_mov_list = generated_moviments[item]
 
             for moviment in generated_mov_list:
-                moviment.game_state = copy.deepcopy(self.game_state)
+                moviment.game_state = copy.deepcopy(game_state)
                 
                 self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
-                
-                #moviment.utility_calculator()
         
         return generated_moviments
+    
+    
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3) -> IaMoviment:
+        
+        print(f"entrei no minimax, {turns}")
+        
+        if game_state is None:
+            game_state = self.game_state
+        
+        if player_id is None:
+            player_id = self.player_id    
+        
+        turns = turns - 1
+        
+        moviments = self.generate_moviments(game_state, player_id)
+        
+        if turns == 0:
+            moviment_list: list[IaMoviment] = []
+            
+            for moviment_tuple in moviments:
+                moviment_list_tmp = moviments[moviment_tuple]
+                
+                for moviment in moviment_list_tmp:
+                    moviment.utility_calculator()
+
+                moviment_list.extend(moviment_list_tmp)
+                
+            moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
+            
+            return moviment_list[0]
+        
+        new_player_id = PlayerId.Player1
+        
+        if player_id == PlayerId.Player1:
+            new_player_id = PlayerId.Player2
+        
+        generated_moviments: list[IaMoviment] = []
+        
+        for moviment_tuple in moviments:
+            moviment_list_tmp = moviments[moviment_tuple]
+            
+            for moviment in moviment_list_tmp:
+                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns)
+
+                generated_moviments.append(new_moviment)
+                
+        print(len(generated_moviments))
+        generated_moviments.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
+        
+        return generated_moviments[0]
