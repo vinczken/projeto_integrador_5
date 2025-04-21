@@ -18,6 +18,10 @@ class IaMoviment:
         self.game_state = game_state
         self.player_id = player_id
         self.utility = 0
+    
+    def __init__(self, utility):
+        self.utility = utility
+        
         
         
     @staticmethod

@@ -195,7 +195,7 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax(turns=1)
+            moviment = self.generate_minimax()
 
             board_a = moviment.moviment_a.selection_properties.board_index
             board_b = moviment.moviment_b.selection_properties.board_index
@@ -203,7 +203,8 @@ class Controller(object):
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
             
-            print(moviment)
+            print(f"P_ID: {moviment.player_id}")
+            print(f"Uti: {moviment.utility}")
 
             self.update_game_state(moviment.moviment_a, moviment.moviment_b)
             
@@ -404,7 +405,7 @@ class Controller(object):
         return generated_moviments
     
     
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 15, alfa = None, beta = None) -> IaMoviment:
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alfa = IaMoviment(float('+inf')), beta = IaMoviment(float('-inf'))) -> IaMoviment:
         if game_state is None:
             game_state = self.game_state
         
@@ -412,7 +413,13 @@ class Controller(object):
             player_id = self.player_id    
         
         turns = turns - 1
+        
         print(f"entrei no minimax, {turns}")
+        if alfa:
+            print(f"{alfa.utility}")
+        
+        if beta:
+            print(f"{beta.utility}")
         
         moviments = self.generate_moviments(game_state, player_id)
         
@@ -425,18 +432,18 @@ class Controller(object):
                 
                 for moviment in moviment_list_tmp:
                     moviment.utility_calculator()
-                    
+                
                 moviment_list.extend(moviment_list_tmp)
                 
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
             if max_turn:
-                if   alfa == None or moviment_list[0].utility > alfa.utility:
+                if   alfa.utility == float('+inf') or moviment_list[0].utility > alfa.utility:
                     return  moviment_list[0]
                 else:
                     return alfa
             else:
-                if  beta == None or moviment_list[0].utility < beta:
+                if  beta.utility == float('-inf') or moviment_list[0].utility < beta.utility:
                     return  moviment_list[0]
                 else:
                     return beta
@@ -451,13 +458,17 @@ class Controller(object):
             
             for moviment in moviment_list_tmp:
                 new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alfa, beta)
+                
                 if not max_turn:
-                    if  alfa == None or new_moviment.utility > alfa.utility:
-                        return new_moviment
-                    else:
-                        return alfa
+                    if  alfa.utility == float('+inf') or new_moviment.utility > alfa.utility:
+                        alfa = new_moviment
                 else:
-                    if beta == None or new_moviment < beta:
-                        return new_moviment
-                    else:
-                        return beta
+                    if beta.utility == float('-inf') or new_moviment.utility < beta.utility:
+                        beta = new_moviment
+                if alfa.utility >= beta.utility:
+                    break
+        
+        if max_turn:
+            return alfa
+        else:
+            return beta
