@@ -349,6 +349,12 @@ class Controller(object):
 
         indexes = [i for i, item in enumerate(game_state) if item == searched_piece]
 
+        indexes_qtd = len(indexes)
+
+        final_len = indexes_qtd
+
+        if final_len > 1:            
+            final_len = random.randint(1, indexes_qtd - 1)
 
         for i in indexes:
             first_index = i
@@ -361,6 +367,15 @@ class Controller(object):
             
             if len(secondary_indexes) == 0:
                 continue
+            
+            secondary_indexes_qtd = len(secondary_indexes)
+            
+            final_secondary_len = secondary_indexes_qtd
+            
+            if final_secondary_len > 1:
+                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)
+            
+            secondary_indexes = random.sample(secondary_indexes, final_secondary_len)            
             
             first_index_board = IndexCalculator.calculate_table(first_index)
 
@@ -418,7 +433,6 @@ class Controller(object):
         
         moviments = self.generate_moviments(game_state, player_id)
         
-        
         if turns == 0:
             #print("turn 0")
             moviment_list: list[IaMoviment] = []
@@ -437,6 +451,7 @@ class Controller(object):
                 return IaMoviment(utility=alpha if max_turn else beta)
             
             return moviment_list[0]
+        
         else:
             new_player_id = PlayerId.Player1
             
@@ -447,10 +462,15 @@ class Controller(object):
             
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
+                                    
+                if len(moviment_list_tmp) > 1:
+                    new_qtd = random.randint(1, len(moviment_list_tmp))                    
+                    moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
                 
                 for moviment in moviment_list_tmp:
                     moviment.utility_calculator()
-                moviment_list_tmp.sort(key=lambda m: m.utility, reverse=max_turn)
+                    
+                #moviment_list_tmp.sort(key=lambda m: m.utility, reverse=max_turn)                                
                 
                 for moviment in moviment_list_tmp:
                     
@@ -462,19 +482,16 @@ class Controller(object):
                         if alpha < new_moviment.utility:
                             #print("alfa trocado")
                             alpha = new_moviment.utility
-                            best_move = moviment
+                            best_move = new_moviment
                     else:
                         if beta > new_moviment.utility:
                             #print("beta trocado")
                             beta = new_moviment.utility
-                            best_move = moviment
+                            best_move = new_moviment
                     
                     #print(f"\talfa: {alpha}, beta: {beta}")
                     
                     if alpha >= beta:
                         return best_move
-                        #print("Saiu")
-                        break
-                    
             
             return best_move
