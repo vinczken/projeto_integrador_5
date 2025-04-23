@@ -1,4 +1,4 @@
-from pygame import Surface
+from pygame import Surface, font
 from enuns.playerId import PlayerId
 from render.board import Board
 from misc.generalUtils import GeneralUtils
@@ -9,6 +9,7 @@ class Field(object):
 
     def __init__(self, display: Surface, screen_width, screen_height, game_state, update_game_state):
         self.display = display
+        self.font = font.Font(None, 36)
         self.size = 0.86 * screen_height        
         self.x_position = (screen_width - self.size) / 2
         self.y_position = (screen_height - self.size) / 2
@@ -35,7 +36,11 @@ class Field(object):
                       game_state[(index * 16): ((index + 1) * 16)]
                     )
                 )
-            
+
+    def draw_ia(self):
+        text = self.font.render("IA está pensando...", True, (255,255,255))
+        text_rect = text.get_rect(center=(self.screen_height * 0.05, self.screen_width * 0.5))
+        self.display.blit(text, text_rect)
     
     def draw(self):    
         

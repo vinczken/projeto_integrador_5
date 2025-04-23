@@ -4,6 +4,7 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
+from enuns.gameState import GameState
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
 import random
@@ -16,6 +17,7 @@ class Controller(object):
         self.screen_width = display.get_width()
         self.screen_height = display.get_height()        
         self.display = display
+        self.activate_random = False
         
         self.player_id = PlayerId.Player1
         
@@ -195,7 +197,7 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax()
+            moviment = self.generate_minimax_states()
 
             board_a = moviment.moviment_a.selection_properties.board_index
             board_b = moviment.moviment_b.selection_properties.board_index
@@ -373,7 +375,7 @@ class Controller(object):
             final_secondary_len = secondary_indexes_qtd
             
             if final_secondary_len > 1:
-                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)            
+                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)
                 secondary_indexes = random.sample(secondary_indexes, final_secondary_len)            
             
             first_index_board = IndexCalculator.calculate_table(first_index)
@@ -383,7 +385,6 @@ class Controller(object):
             first_index_in_board = first_index % 16
 
             valid_first_moviments = self.calculate_valid_moves(first_index_in_board, first_index_board_state)
-
 
             for secondary_index in secondary_indexes:
                 
@@ -398,10 +399,11 @@ class Controller(object):
                 possible_moviments = self.merge_moves(
                         first_index_board, 
                         valid_first_moviments, 
-                        second_index_board, 
-                        valid_secondary_moviments,
-                        game_state
-                    )
+                    first_index_board, 
+                    valid_first_moviments, 
+                    valid_secondary_moviments,
+                    game_state
+                )
                 
                 visited_indexes.append((first_index, secondary_index))
                 ia_moviments.append(IaMovimentProperties((first_index, secondary_index), possible_moviments, valid_first_moviments, valid_secondary_moviments))
@@ -418,22 +420,44 @@ class Controller(object):
         
         return generated_moviments
     
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alpha = float('-inf'), beta = float('inf') ) -> IaMoviment:
+    def analyze_game_state(self, game_state: list = None, player_id: PlayerId = None) -> GameState:
+        if game_state is None:
+            game_state = self.game_state
+        
+        boards = []
+        for i in range(0, 4):
+            boards.append()
+    
+    def generate_minimax_states(self, game_state: list = None, player_id: PlayerId = None) -> IaMoviment:
         if game_state is None:
             game_state = self.game_state
         
         if player_id is None:
             player_id = self.player_id    
         
-        turns = turns - 1
+        moviments = self.generate_moviments(game_state, player_id)
         
-        #print(f"entrei no minimax, {turns}, {max_turn}")
-        #print(f"alfa: {alpha}, beta: {beta}")
+        best_move = None
+        
+        for moviment_tuple in moviments:
+            moviment_list_tmp = moviments[moviment_tuple]
+            
+            for moviment in moviment_list_tmp:
+                move_uti = self.generate_minimax(moviment.game_state, player_id)
+                
+                if best_move == None or best_move.utility < move_uti:
+                    best_move = moviment
+                    best_move.utility = move_uti
+                    print(best_move.utility)
+            
+            return best_move
+    
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 5, alpha = float('-inf'), beta = float('inf')) -> int:
+        turns = turns - 1
         
         moviments = self.generate_moviments(game_state, player_id)
         
         if turns == 0:
-            #print("turn 0")
             moviment_list: list[IaMoviment] = []
             
             for moviment_tuple in moviments:
@@ -443,13 +467,14 @@ class Controller(object):
                     moviment.utility_calculator()
                 
                 moviment_list.extend(moviment_list_tmp)
-                
+            
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
             if not moviment_list:
-                return IaMoviment(utility=alpha if max_turn else beta)
+                return alpha if max_turn else beta
             
-            return moviment_list[0]
+            print(f"\t{turns}\tM_T: {max_turn}, N_M: {moviment_list[0].utility}, alfa: {alpha}, beta: {beta}")
+            return moviment_list[0].utility
         
         else:
             new_player_id = PlayerId.Player1
@@ -457,38 +482,30 @@ class Controller(object):
             if player_id == PlayerId.Player1:
                 new_player_id = PlayerId.Player2
             
-            best_move = None
-            
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
-                                    
-                if len(moviment_list_tmp) > 1:
-                    new_qtd = random.randint(1, len(moviment_list_tmp))                    
-                    moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
                 
+                if self.activate_random:
+                    if len(moviment_list_tmp) > 1:
+                        new_qtd = random.randint(1, len(moviment_list_tmp))                    
+                        moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
                 
                 for moviment in moviment_list_tmp:
-                    
-                    new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alpha, beta)
-                    #print(f"\tsai do minimax, {turns}, {max_turn}")
-                    #print(f"\tNM: {new_moviment.utility}")
+                    next_move = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alpha, beta)
+                    print(f"\t{turns}\tM_T: {max_turn}, N_M: {next_move}, alfa: {alpha}, beta: {beta}")
                     
                     if max_turn:
-                        if alpha < new_moviment.utility:
-                            #print("alfa trocado")
-                            alpha = new_moviment.utility
-                            moviment.utility = new_moviment.utility
-                            best_move = moviment
+                        if alpha < next_move:
+                            alpha = next_move
                     else:
-                        if beta > new_moviment.utility:
-                            #print("beta trocado")
-                            beta = new_moviment.utility
-                            moviment.utility = new_moviment.utility
-                            best_move = moviment
+                        if beta > next_move:
+                            beta = next_move
                     
-                    #print(f"\talfa: {alpha}, beta: {beta}")
                     
                     if alpha >= beta:
-                        return best_move
+                        break
             
-            return best_move
+            if max_turn:
+                return alpha
+            else:
+                return beta
