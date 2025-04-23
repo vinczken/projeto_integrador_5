@@ -373,9 +373,8 @@ class Controller(object):
             final_secondary_len = secondary_indexes_qtd
             
             if final_secondary_len > 1:
-                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)
-            
-            secondary_indexes = random.sample(secondary_indexes, final_secondary_len)            
+                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)            
+                secondary_indexes = random.sample(secondary_indexes, final_secondary_len)            
             
             first_index_board = IndexCalculator.calculate_table(first_index)
 
@@ -413,7 +412,7 @@ class Controller(object):
             generated_mov_list = generated_moviments[item]
 
             for moviment in generated_mov_list:
-                moviment.game_state = copy.deepcopy(game_state)
+                moviment.game_state = game_state.copy()
                 
                 self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
         
@@ -467,10 +466,6 @@ class Controller(object):
                     new_qtd = random.randint(1, len(moviment_list_tmp))                    
                     moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
                 
-                for moviment in moviment_list_tmp:
-                    moviment.utility_calculator()
-                    
-                #moviment_list_tmp.sort(key=lambda m: m.utility, reverse=max_turn)                                
                 
                 for moviment in moviment_list_tmp:
                     
@@ -482,12 +477,14 @@ class Controller(object):
                         if alpha < new_moviment.utility:
                             #print("alfa trocado")
                             alpha = new_moviment.utility
-                            best_move = new_moviment
+                            moviment.utility = new_moviment.utility
+                            best_move = moviment
                     else:
                         if beta > new_moviment.utility:
                             #print("beta trocado")
                             beta = new_moviment.utility
-                            best_move = new_moviment
+                            moviment.utility = new_moviment.utility
+                            best_move = moviment
                     
                     #print(f"\talfa: {alpha}, beta: {beta}")
                     

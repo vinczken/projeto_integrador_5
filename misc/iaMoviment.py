@@ -97,7 +97,10 @@ class IaMoviment:
                 self.moviment_a.selection_properties.board_index
             ]
         
-        for n in boards:
+        player_sum += 400 - 25 * self.game_state.count(enemy_piece)
+        enemy_sum += 400 - 25 * self.game_state.count(player_piece)
+        
+        for n in range(4):
             
             board = self.game_state[(n * 16) : ((n + 1) * 16)]
             
