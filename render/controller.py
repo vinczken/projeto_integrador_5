@@ -4,6 +4,7 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
+from enuns.gameState import GameState
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
 import random
@@ -195,7 +196,7 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax()
+            moviment = self.generate_minimax_states()
 
             board_a = moviment.moviment_a.selection_properties.board_index
             board_b = moviment.moviment_b.selection_properties.board_index
@@ -336,6 +337,24 @@ class Controller(object):
             
         return possible_indexes
 
+    def analyze_gamestate(self, game_state: list = None) -> GameState:
+        if game_state is None:
+            game_state = self.game_state
+        
+        seached_pieces = ['W', 'B']
+        
+        for n in range(4):
+            board = self.game_state[(n * 16) : ((n + 1) * 16)]
+            
+            P1_pieces = board.count(seached_pieces[0])
+            P2_pieces = board.count(seached_pieces[1])
+            
+            if P1_pieces == 0:
+                return GameState.Player_1
+            elif P2_pieces == 0:
+                return GameState.Player_2
+        
+        return GameState.NotOver
 
     def generate_moviments(self, game_state: list, player_id: PlayerId) -> dict[tuple, list[IaMoviment]]:
         
@@ -412,27 +431,43 @@ class Controller(object):
             generated_mov_list = generated_moviments[item]
 
             for moviment in generated_mov_list:
-                moviment.game_state = game_state.copy()
+                temp = ','.join(game_state)
+                moviment.game_state = temp.split(',')
                 
                 self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
         
         return generated_moviments
     
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alpha = float('-inf'), beta = float('inf') ) -> IaMoviment:
+    def generate_minimax_states(self, game_state: list = None, player_id: PlayerId = None) -> IaMoviment:
         if game_state is None:
             game_state = self.game_state
         
         if player_id is None:
             player_id = self.player_id    
         
-        turns = turns - 1
+        moviments = self.generate_moviments(game_state, player_id)
+        best_value = float('-inf')
+        best_move = None
         
-        #print(f"entrei no minimax, {turns}, {max_turn}")
-        #print(f"alfa: {alpha}, beta: {beta}")
+        for moviment_tuple in moviments:
+            moviment_list_tmp = moviments[moviment_tuple]
+            
+            for moviment in moviment_list_tmp:
+                move_uti = self.generate_minimax(moviment.game_state, player_id, False)
+                
+                if best_value < move_uti:
+                    best_move = moviment
+                    best_value = move_uti
+            
+            return best_move
+    
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 1, alpha = float('-inf'), beta = float('inf')) -> int:
+        
         
         moviments = self.generate_moviments(game_state, player_id)
+        game = self.analyze_gamestate(game_state)
         
-        if turns == 0:
+        if game != GameState.NotOver or turns == 0:
             #print("turn 0")
             moviment_list: list[IaMoviment] = []
             
@@ -447,9 +482,9 @@ class Controller(object):
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
             if not moviment_list:
-                return IaMoviment(utility=alpha if max_turn else beta)
+                return alpha if max_turn else beta
             
-            return moviment_list[0]
+            return moviment_list[0].utility
         
         else:
             new_player_id = PlayerId.Player1
@@ -457,38 +492,36 @@ class Controller(object):
             if player_id == PlayerId.Player1:
                 new_player_id = PlayerId.Player2
             
-            best_move = None
-            
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
-                                    
+                
                 if len(moviment_list_tmp) > 1:
                     new_qtd = random.randint(1, len(moviment_list_tmp))                    
                     moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
                 
+                for moviment in moviment_list_tmp:
+                    moviment.utility_calculator()
+                
+                moviment_list_tmp.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
                 
                 for moviment in moviment_list_tmp:
                     
-                    new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns, alpha, beta)
-                    #print(f"\tsai do minimax, {turns}, {max_turn}")
+                    new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns - 1, alpha, beta)
+                    
                     #print(f"\tNM: {new_moviment.utility}")
                     
                     if max_turn:
-                        if alpha < new_moviment.utility:
-                            #print("alfa trocado")
-                            alpha = new_moviment.utility
-                            moviment.utility = new_moviment.utility
-                            best_move = moviment
+                        if alpha < new_moviment:
+                            alpha = new_moviment
                     else:
-                        if beta > new_moviment.utility:
-                            #print("beta trocado")
-                            beta = new_moviment.utility
-                            moviment.utility = new_moviment.utility
-                            best_move = moviment
-                    
+                        if beta > new_moviment:
+                            beta = new_moviment
                     #print(f"\talfa: {alpha}, beta: {beta}")
                     
                     if alpha >= beta:
-                        return best_move
+                        break
             
-            return best_move
+            if max_turn:
+                return alpha
+            else:
+                return beta
