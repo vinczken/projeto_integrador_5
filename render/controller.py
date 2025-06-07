@@ -93,7 +93,7 @@ class Controller(object):
                 
                 if not (game_state[move_A_index_0] != "" and game_state[move_A_index_0] == game_state[move_B_index_0]):    
                     moviments.append((move_A[0], move_B[0]))
- 
+
                 else:
                     continue
                 
@@ -194,16 +194,28 @@ class Controller(object):
 
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
-        if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax(turns=1)
+        if self.player_id == PlayerId.Player2:        
+            best_value = float('-inf') 
+            best_move = -1
 
-            board_a = moviment.moviment_a.selection_properties.board_index
-            board_b = moviment.moviment_b.selection_properties.board_index
+            moviments = self.generate_moviments(self.game_state, self.player_id)
+
+                
+            for moviment_tuple in moviments:
+                moviment_list_tmp = moviments[moviment_tuple]
+                for moviment in moviment_list_tmp:
+                    utility = self.generate_minimax(moviment, self.player_id, False, 3)
+                    if utility > best_value:
+                        best_value = utility
+                        best_move = moviment
+
+            board_a = best_move.moviment_a.selection_properties.board_index
+            board_b = best_move.moviment_b.selection_properties.board_index
+            print(board_a, board_b)
 
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
             
-            print(moviment)
 
             self.update_game_state(moviment.moviment_a, moviment.moviment_b)
             
@@ -404,50 +416,52 @@ class Controller(object):
         return generated_moviments
     
     
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3) -> IaMoviment:
+    def generate_minimax(self, moviment: IaMoviment = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 10, alpha = float('-inf'), beta = float('+inf')) -> int:
             
-        if game_state is None:
-            game_state = self.game_state
-        
         if player_id is None:
             player_id = self.player_id    
         
         turns = turns - 1
         
-        moviments = self.generate_moviments(game_state, player_id)
+        moviments = self.generate_moviments(moviment.game_state, player_id)
         
-        if turns == 0:
+        if turns == 0 or self.game_ended(moviment.game_state):
             
-            moviment_list: list[IaMoviment] = []
-            
-            for moviment_tuple in moviments:
-                moviment_list_tmp = moviments[moviment_tuple]
-                
-                for moviment in moviment_list_tmp:
-                    moviment.utility_calculator()
-
-                moviment_list.extend(moviment_list_tmp)
-                
-            moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
-            
-            return moviment_list[0]
+            return moviment.utility
         
         new_player_id = PlayerId.Player1
         
         if player_id == PlayerId.Player1:
             new_player_id = PlayerId.Player2
-        
-        generated_moviments: list[IaMoviment] = []
-        
-        for moviment_tuple in moviments:
-            moviment_list_tmp = moviments[moviment_tuple]
-            
-            for moviment in moviment_list_tmp:
-                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns)
 
-                generated_moviments.append(new_moviment)
+        if max_turn:
+            for moviment_tuple in moviments:
+                moviment_list_tmp = moviments[moviment_tuple]
                 
-        print(len(generated_moviments))
-        generated_moviments.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
+                for moviment in moviment_list_tmp:
+                    utility = self.generate_minimax(moviment, new_player_id, not max_turn, turns, alpha, beta)
+                    alpha = max(utility, alpha)
+                    if beta <= alpha:
+                        continue
+                    return alpha
+        else:
+            for moviment_tuple in moviments:
+                moviment_list_tmp = moviments[moviment_tuple]
+                for moviment in moviment_list_tmp:
+                    utility = self.generate_minimax(moviment, new_player_id, not max_turn, turns, alpha, beta)
+                    beta = min(utility, beta)
+                    if beta <= alpha:
+                        continue
+                    return beta
+    
+    def game_ended(self, game_state: list = None) -> bool:
         
-        return generated_moviments[0]
+        if game_state == None:
+            game_state = self.game_state
+        
+        for i in range(0, len(self.game_state), 16):
+            board = self.game_state[i:i+16]
+            non_empty = [c for c in board if c != '']
+            if all(piece == non_empty[0] for piece in non_empty):
+                return True
+        return False
