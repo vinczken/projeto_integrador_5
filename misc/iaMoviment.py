@@ -12,13 +12,12 @@ class IaMoviment:
         IndexCalculator.aux_positions(3)        
     ]
 
-    def __init__(self, moviment_a: MovimentProperties = None, moviment_b: MovimentProperties = None, game_state = None, player_id: PlayerId = None, utility: int = 0):
+    def __init__(self, moviment_a: MovimentProperties, moviment_b: MovimentProperties, game_state, player_id: PlayerId):
         self.moviment_a = moviment_a
         self.moviment_b = moviment_b
         self.game_state = game_state
         self.player_id = player_id
-        self.utility = utility
-    
+        self.utility = 0
         
         
     @staticmethod
@@ -97,21 +96,18 @@ class IaMoviment:
                 self.moviment_a.selection_properties.board_index
             ]
         
-        player_sum += 400 - 25 * self.game_state.count(enemy_piece)
-        enemy_sum += 400 - 25 * self.game_state.count(player_piece)
-        
-        for n in range(4):
+        for n in boards:
             
             board = self.game_state[(n * 16) : ((n + 1) * 16)]
             
             # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
             if player_piece not in board:
-                self.utility = -1000
+                self.utility_calculator = -1000
                 return self.utility
             
             # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
-                self.utility = 1000
+                self.utility_calculator = 1000
                 return self.utility
             
             for piece_index in range(len(board)):

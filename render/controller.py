@@ -4,7 +4,6 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
-from enuns.gameState import GameState
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
 import random
@@ -196,7 +195,7 @@ class Controller(object):
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
         
         if self.player_id == PlayerId.Player2:            
-            moviment = self.generate_minimax_states()
+            moviment = self.generate_minimax(turns=1)
 
             board_a = moviment.moviment_a.selection_properties.board_index
             board_b = moviment.moviment_b.selection_properties.board_index
@@ -204,8 +203,7 @@ class Controller(object):
             print("\n\n")
             print("---- Imprimindo resultado da geração: \n")
             
-            print(f"P_ID: {moviment.player_id}")
-            print(f"Uti: {moviment.utility}")
+            print(moviment)
 
             self.update_game_state(moviment.moviment_a, moviment.moviment_b)
             
@@ -337,24 +335,6 @@ class Controller(object):
             
         return possible_indexes
 
-    def analyze_gamestate(self, game_state: list = None) -> GameState:
-        if game_state is None:
-            game_state = self.game_state
-        
-        seached_pieces = ['W', 'B']
-        
-        for n in range(4):
-            board = self.game_state[(n * 16) : ((n + 1) * 16)]
-            
-            P1_pieces = board.count(seached_pieces[0])
-            P2_pieces = board.count(seached_pieces[1])
-            
-            if P1_pieces == 0:
-                return GameState.Player_1
-            elif P2_pieces == 0:
-                return GameState.Player_2
-        
-        return GameState.NotOver
 
     def generate_moviments(self, game_state: list, player_id: PlayerId) -> dict[tuple, list[IaMoviment]]:
         
@@ -368,12 +348,6 @@ class Controller(object):
 
         indexes = [i for i, item in enumerate(game_state) if item == searched_piece]
 
-        indexes_qtd = len(indexes)
-
-        final_len = indexes_qtd
-
-        if final_len > 1:            
-            final_len = random.randint(1, indexes_qtd - 1)
 
         for i in indexes:
             first_index = i
@@ -386,14 +360,6 @@ class Controller(object):
             
             if len(secondary_indexes) == 0:
                 continue
-            
-            secondary_indexes_qtd = len(secondary_indexes)
-            
-            final_secondary_len = secondary_indexes_qtd
-            
-            if final_secondary_len > 1:
-                final_secondary_len = random.randint(1, secondary_indexes_qtd - 1)            
-                secondary_indexes = random.sample(secondary_indexes, final_secondary_len)            
             
             first_index_board = IndexCalculator.calculate_table(first_index)
 
@@ -431,44 +397,27 @@ class Controller(object):
             generated_mov_list = generated_moviments[item]
 
             for moviment in generated_mov_list:
-                temp = ','.join(game_state)
-                moviment.game_state = temp.split(',')
+                moviment.game_state = copy.deepcopy(game_state)
                 
                 self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
         
         return generated_moviments
     
-    def generate_minimax_states(self, game_state: list = None, player_id: PlayerId = None) -> IaMoviment:
+    
+    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3) -> IaMoviment:
+            
         if game_state is None:
             game_state = self.game_state
         
         if player_id is None:
             player_id = self.player_id    
         
-        moviments = self.generate_moviments(game_state, player_id)
-        best_value = float('-inf')
-        best_move = None
-        
-        for moviment_tuple in moviments:
-            moviment_list_tmp = moviments[moviment_tuple]
-            
-            for moviment in moviment_list_tmp:
-                move_uti = self.generate_minimax(moviment.game_state, player_id, False)
-                
-                if best_value < move_uti:
-                    best_move = moviment
-                    best_value = move_uti
-            
-            return best_move
-    
-    def generate_minimax(self, game_state: list = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 1, alpha = float('-inf'), beta = float('inf')) -> int:
-        
+        turns = turns - 1
         
         moviments = self.generate_moviments(game_state, player_id)
-        game = self.analyze_gamestate(game_state)
         
-        if game != GameState.NotOver or turns == 0:
-            #print("turn 0")
+        if turns == 0:
+            
             moviment_list: list[IaMoviment] = []
             
             for moviment_tuple in moviments:
@@ -476,52 +425,29 @@ class Controller(object):
                 
                 for moviment in moviment_list_tmp:
                     moviment.utility_calculator()
-                
+
                 moviment_list.extend(moviment_list_tmp)
                 
             moviment_list.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
             
-            if not moviment_list:
-                return alpha if max_turn else beta
-            
-            return moviment_list[0].utility
+            return moviment_list[0]
         
-        else:
-            new_player_id = PlayerId.Player1
+        new_player_id = PlayerId.Player1
+        
+        if player_id == PlayerId.Player1:
+            new_player_id = PlayerId.Player2
+        
+        generated_moviments: list[IaMoviment] = []
+        
+        for moviment_tuple in moviments:
+            moviment_list_tmp = moviments[moviment_tuple]
             
-            if player_id == PlayerId.Player1:
-                new_player_id = PlayerId.Player2
-            
-            for moviment_tuple in moviments:
-                moviment_list_tmp = moviments[moviment_tuple]
+            for moviment in moviment_list_tmp:
+                new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns)
+
+                generated_moviments.append(new_moviment)
                 
-                if len(moviment_list_tmp) > 1:
-                    new_qtd = random.randint(1, len(moviment_list_tmp))                    
-                    moviment_list_tmp = random.sample(moviment_list_tmp, new_qtd)
-                
-                for moviment in moviment_list_tmp:
-                    moviment.utility_calculator()
-                
-                moviment_list_tmp.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
-                
-                for moviment in moviment_list_tmp:
-                    
-                    new_moviment = self.generate_minimax(moviment.game_state, new_player_id, not max_turn, turns - 1, alpha, beta)
-                    
-                    #print(f"\tNM: {new_moviment.utility}")
-                    
-                    if max_turn:
-                        if alpha < new_moviment:
-                            alpha = new_moviment
-                    else:
-                        if beta > new_moviment:
-                            beta = new_moviment
-                    #print(f"\talfa: {alpha}, beta: {beta}")
-                    
-                    if alpha >= beta:
-                        break
-            
-            if max_turn:
-                return alpha
-            else:
-                return beta
+        print(len(generated_moviments))
+        generated_moviments.sort(key=lambda moviment: moviment.utility, reverse=max_turn)
+        
+        return generated_moviments[0]
