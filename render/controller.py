@@ -454,13 +454,13 @@ class Controller(object):
                         continue
                     return beta
     
-    def game_ended(self, game_state: list = None) -> bool:
+    def game_ended(self, local_game_state: list = None) -> bool:
         
-        if game_state == None:
-            game_state = self.game_state
+        if local_game_state == None:
+            local_game_state = self.game_state
         
-        for i in range(0, len(self.game_state), 16):
-            board = self.game_state[i:i+16]
+        for i in range(0, len(local_game_state), 16):
+            board = local_game_state[i:i+16]
             non_empty = [c for c in board if c != '']
             if all(piece == non_empty[0] for piece in non_empty):
                 return True
