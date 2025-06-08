@@ -212,12 +212,12 @@ class Controller(object):
             board_a = best_move.moviment_a.selection_properties.board_index
             board_b = best_move.moviment_b.selection_properties.board_index
             print(board_a, board_b)
-
-            print("\n\n")
-            print("---- Imprimindo resultado da geração: \n")
             
+            print("---- Imprimindo resultado da geração: \n")
+            print(best_move.moviment_a.selection_properties.square_index)
+            print(best_move.moviment_b.selection_properties.square_index)
 
-            self.update_game_state(moviment.moviment_a, moviment.moviment_b)
+            self.update_game_state(best_move.moviment_a, best_move.moviment_b)
             
             self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
             self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
@@ -409,14 +409,14 @@ class Controller(object):
             generated_mov_list = generated_moviments[item]
 
             for moviment in generated_mov_list:
-                moviment.game_state = copy.deepcopy(game_state)
+                moviment.game_state = game_state.copy()
                 
                 self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
         
         return generated_moviments
     
     
-    def generate_minimax(self, moviment: IaMoviment = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 10, alpha = float('-inf'), beta = float('+inf')) -> int:
+    def generate_minimax(self, moviment: IaMoviment = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alpha = float('-inf'), beta = float('+inf')) -> int:
             
         if player_id is None:
             player_id = self.player_id    
