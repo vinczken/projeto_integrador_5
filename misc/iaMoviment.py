@@ -211,5 +211,4 @@ class IaMoviment:
                             # não é possivel mover a peça assim, nem contabilizar pontos...
             
         self.utility = player_sum - enemy_sum
-        
         return self.utility
