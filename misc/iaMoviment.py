@@ -93,7 +93,7 @@ class IaMoviment:
         
         boards = [
                 self.moviment_a.selection_properties.board_index, 
-                self.moviment_a.selection_properties.board_index
+                self.moviment_b.selection_properties.board_index
             ]
         
         for n in boards:
