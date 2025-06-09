@@ -1,0 +1,33 @@
+-> Estados salvos na tabela como:
+	tabelaQ[game_state][index_mov] = VALOR_DELE
+		  string	tupla(index_direcao, distancia)
+
+-> 1º -> game_state no formato de string simples -> "WWWW________BBBB"
+-> 2º -> peças selecionadas serão diferentes das demais peças
+
+"WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"
+
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(5, 1)] = 24
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(5, 2)] = 29
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(6, 1)] = 33
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(6, 1)] = 12
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(7, 1)] = 10
+tabelaQ["WwWW________BBBBWWwW________BBBBWWWW________BBBBWWWW________BBBB"][(7, 2)] = -10
+
+-> Se o estado não existir, ele não estará na tabela
+
+-> A tabela Q armazena os valores de cada estado e ação
+
+-> Para atualizar o estado e o valor daquela ação, a equação é:
+
+Q(s, a) <- Q(s, a) + ALPHA(utilidade(s,a) + GAMA * max(estados derivados de Q(s, a)) - Q(s, a))
+
+Q(S, a) = tabelaQ[game_state][index_mov]
+
+ALPHA = hiperparâmetro, que varia de 0 a 1. Definido inicialmente como 0.1; representa quanto será aprendido.
+
+utilidade(s, a) ou R(s, a) = é a função utilidade. 
+
+GAMA = taxa de desconto, quanto o que foi aprendido influencia. Valor assumido: 0.9
+
+max(estados derivados de Q(s, a)) = Valor máximo dos estados gerados a partir de s. Sendo para todas as direções.
