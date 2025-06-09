@@ -20,6 +20,7 @@ class Controller(object):
         self.q_learning = QLearning()
         self.player_id = PlayerId.Player1
         self.rounds = 0
+        self.finished = False
         
         self.game_state = [
             "W","W","W","W",
@@ -194,6 +195,9 @@ class Controller(object):
     def draw(self):
         self.field.draw()   
 
+        if self.finished == True:
+            return
+
         if self.rounds % 10 == 0:
             self.q_learning.save_table();
         
@@ -211,8 +215,8 @@ class Controller(object):
             if best_moviment == None:
                 return
             
-
             print("Utilidade do movimento Q-Learning: ", best_moviment.utility)
+        
 
             board_a = best_moviment.moviment_a.selection_properties.board_index
             board_b = best_moviment.moviment_b.selection_properties.board_index            
@@ -224,6 +228,9 @@ class Controller(object):
             
             self.player_id = PlayerId.Player2
             self.field.player_id = PlayerId.Player2
+
+            if best_moviment.utility == 10000 or best_moviment.utility == -10000:
+                self.finished = True            
 
             return
         
@@ -239,14 +246,17 @@ class Controller(object):
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment in moviment_list_tmp:
-                    utility = self.generate_minimax(moviment, self.player_id, False, 35)
+                    utility = self.generate_minimax(moviment, self.player_id, False, 45)
                     if utility > best_value:
                         best_value = utility
                         best_move = moviment        
 
-
+            
             print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
             print("best_value do movimento minimax: ", best_value)
+            
+            if best_move.handle_utility_calculator() == 10000 or best_move.handle_utility_calculator() == -10000:
+                self.finished = True                
 
             board_a = best_move.moviment_a.selection_properties.board_index
             board_b = best_move.moviment_b.selection_properties.board_index        

@@ -121,6 +121,8 @@ class IaMoviment:
             if qtd_player > qtd_enemy:
                 player_sum += qtd_player * 5
 
+            utility = (qtd_player - qtd_enemy) * 10
+
             for piece_index in range(len(board)):
                 
                 piece = board[piece_index]
@@ -221,5 +223,5 @@ class IaMoviment:
                             # cenários: X _ 0 X ou X _ 0 0
                             # não é possivel mover a peça assim, nem contabilizar pontos...
             
-        utility = player_sum - enemy_sum
+        utility += player_sum - enemy_sum
         return utility
