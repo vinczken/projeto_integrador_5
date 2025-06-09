@@ -6,6 +6,7 @@ from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
+from misc.qLearning import QLearning
 import random
 import copy
 
@@ -16,8 +17,9 @@ class Controller(object):
         self.screen_width = display.get_width()
         self.screen_height = display.get_height()        
         self.display = display
-        
+        self.q_learning = QLearning()
         self.player_id = PlayerId.Player1
+        self.rounds = 0
         
         self.game_state = [
             "W","W","W","W",
@@ -192,9 +194,39 @@ class Controller(object):
     def draw(self):
         self.field.draw()   
 
-        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
+        if self.rounds % 10 == 0:
+            self.q_learning.save_table();
         
-        if self.player_id == PlayerId.Player2:        
+        if self.rounds > 10000:
+            self.rounds = 0
+            
+        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
+
+        if self.player_id == PlayerId.Player1:
+                    
+            moviments = self.generate_moviments(self.game_state, self.player_id)
+            
+            best_moviment = self.q_learning.select_state(self.game_state, moviments, self.player_id)
+            
+            if best_moviment == None:
+                return
+            
+            board_a = best_moviment.moviment_a.selection_properties.board_index
+            board_b = best_moviment.moviment_b.selection_properties.board_index            
+
+            self.update_game_state(best_moviment.moviment_a, best_moviment.moviment_b)
+            
+            self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
+            self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
+            
+            self.player_id = PlayerId.Player2
+            self.field.player_id = PlayerId.Player2
+
+            return
+        
+        
+        if self.player_id == PlayerId.Player2:      
+                    
             best_value = float('-inf') 
             best_move = -1
 
@@ -207,16 +239,10 @@ class Controller(object):
                     utility = self.generate_minimax(moviment, self.player_id, False, 35)
                     if utility > best_value:
                         best_value = utility
-                        best_move = moviment
-            
-            print(best_value)
+                        best_move = moviment        
 
             board_a = best_move.moviment_a.selection_properties.board_index
-            board_b = best_move.moviment_b.selection_properties.board_index
-            
-            #print("---- Imprimindo resultado da geração: \n")
-            #print(best_move.moviment_a.selection_properties.square_index)
-            #print(best_move.moviment_b.selection_properties.square_index)
+            board_b = best_move.moviment_b.selection_properties.board_index        
 
             self.update_game_state(best_move.moviment_a, best_move.moviment_b)
             
@@ -226,6 +252,7 @@ class Controller(object):
             self.player_id = PlayerId.Player1
             self.field.player_id = PlayerId.Player1
 
+            self.rounds += 1
         return
     
     

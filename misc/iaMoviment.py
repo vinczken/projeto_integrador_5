@@ -104,12 +104,12 @@ class IaMoviment:
             
             # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
             if player_piece not in board:
-                utility = -1000
+                utility = -10000
                 return utility
             
             # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
-                utility = 1000
+                utility = 10000
                 return utility
             
             for piece_index in range(len(board)):
@@ -146,10 +146,10 @@ class IaMoviment:
                     if piece == board[distance_1_index]:
                         
                         if piece == player_piece:
-                            player_sum += 1
+                            player_sum += 5
                         
                         else:
-                            enemy_sum += 1
+                            enemy_sum += 5
                         
                         continue
                     
@@ -157,10 +157,10 @@ class IaMoviment:
                         
                         if distance_2_index == -1:
                             if piece == player_piece:
-                                player_sum += 10
+                                player_sum += 50
                                 
                             else:
-                                enemy_sum += 10
+                                enemy_sum += 50
                                 
                             continue
                         
@@ -170,10 +170,10 @@ class IaMoviment:
                             
                             if distance_3_index == -1:                                
                                 if piece == player_piece:
-                                    player_sum += 10
+                                    player_sum += 50
                                 
                                 else:
-                                    enemy_sum += 10
+                                    enemy_sum += 50
                                     
                             # O cenario é: _ X 0 X ou _ X 0 0
                             # Para o cenário, não possui caso
@@ -192,19 +192,19 @@ class IaMoviment:
                             
                             if distance_3_index == -1:
                                 if board[distance_2_index] == enemy_piece:
-                                    player_sum += 10
+                                    player_sum += 50
                                     
                                 else:
-                                    enemy_sum += 10
+                                    enemy_sum += 50
                                     
                                 continue
                             
                             if board[distance_3_index] == '':
                                 if board[distance_2_index] == enemy_piece:
-                                    player_sum += 1
+                                    player_sum += 5
                                     
                                 else: 
-                                    enemy_sum += 1
+                                    enemy_sum += 5
                             
                                 continue
                         
