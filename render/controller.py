@@ -425,7 +425,7 @@ class Controller(object):
         moviments = self.generate_moviments(moviment.game_state, player_id)
         state_of_game = self.game_ended(moviment.game_state)
         if turns == 0 or state_of_game:
-            return moviment.utility_calculator()
+            return moviment.handle_utility_calculator()
         
         new_player_id = PlayerId.Player1
         

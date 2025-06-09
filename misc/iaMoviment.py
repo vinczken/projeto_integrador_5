@@ -78,8 +78,15 @@ class IaMoviment:
         
         return ia_moviments
     
-                
-    def utility_calculator(self) -> int:
+    
+    def handle_utility_calculator(self) -> int:        
+        self.utility = IaMoviment.utility_calculator(self.game_state, self.player_id)
+        
+        return self.utility
+        
+    
+    @staticmethod                
+    def utility_calculator(game_state, player_id) -> int:
         
         player_piece = 'W'
         enemy_piece = 'B'
@@ -87,28 +94,23 @@ class IaMoviment:
         player_sum = 0
         enemy_sum = 0
         
-        if self.player_id == PlayerId.Player2:
+        if player_id == PlayerId.Player2:
             player_piece = 'B'
-            enemy_piece = 'W'
+            enemy_piece = 'W'        
         
-        boards = [
-                self.moviment_a.selection_properties.board_index, 
-                self.moviment_b.selection_properties.board_index
-            ]
-        
-        for n in boards:
+        for n in range(0, 4):
             
-            board = self.game_state[(n * 16) : ((n + 1) * 16)]
+            board = game_state[(n * 16) : ((n + 1) * 16)]
             
             # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
             if player_piece not in board:
-                self.utility = -1000
-                return self.utility
+                utility = -1000
+                return utility
             
             # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
-                self.utility = 1000
-                return self.utility
+                utility = 1000
+                return utility
             
             for piece_index in range(len(board)):
                 
@@ -155,10 +157,10 @@ class IaMoviment:
                         
                         if distance_2_index == -1:
                             if piece == player_piece:
-                                player_sum += 5
+                                player_sum += 10
                                 
                             else:
-                                enemy_sum += 5
+                                enemy_sum += 10
                                 
                             continue
                         
@@ -168,10 +170,10 @@ class IaMoviment:
                             
                             if distance_3_index == -1:                                
                                 if piece == player_piece:
-                                    player_sum += 6
+                                    player_sum += 10
                                 
                                 else:
-                                    enemy_sum += 6
+                                    enemy_sum += 10
                                     
                             # O cenario é: _ X 0 X ou _ X 0 0
                             # Para o cenário, não possui caso
@@ -190,10 +192,10 @@ class IaMoviment:
                             
                             if distance_3_index == -1:
                                 if board[distance_2_index] == enemy_piece:
-                                    player_sum += 5
+                                    player_sum += 10
                                     
                                 else:
-                                    enemy_sum += 5
+                                    enemy_sum += 10
                                     
                                 continue
                             
@@ -210,5 +212,5 @@ class IaMoviment:
                             # cenários: X _ 0 X ou X _ 0 0
                             # não é possivel mover a peça assim, nem contabilizar pontos...
             
-        self.utility = player_sum - enemy_sum
-        return self.utility
+        utility = player_sum - enemy_sum
+        return utility
