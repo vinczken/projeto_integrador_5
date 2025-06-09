@@ -211,6 +211,9 @@ class Controller(object):
             if best_moviment == None:
                 return
             
+
+            print("Utilidade do movimento Q-Learning: ", best_moviment.utility)
+
             board_a = best_moviment.moviment_a.selection_properties.board_index
             board_b = best_moviment.moviment_b.selection_properties.board_index            
 
@@ -240,6 +243,10 @@ class Controller(object):
                     if utility > best_value:
                         best_value = utility
                         best_move = moviment        
+
+
+            print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
+            print("best_value do movimento minimax: ", best_value)
 
             board_a = best_move.moviment_a.selection_properties.board_index
             board_b = best_move.moviment_b.selection_properties.board_index        
