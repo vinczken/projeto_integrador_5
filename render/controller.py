@@ -246,7 +246,7 @@ class Controller(object):
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment in moviment_list_tmp:
-                    utility = self.generate_minimax(moviment, self.player_id, False, 45)
+                    utility = self.generate_minimax(moviment, self.player_id, False, 2, float('-inf'),float('+inf'))
                     if utility > best_value:
                         best_value = utility
                         best_move = moviment        
@@ -469,6 +469,7 @@ class Controller(object):
         moviments = self.generate_moviments(moviment.game_state, player_id)
         state_of_game = self.game_ended(moviment.game_state)
         if turns == 0 or state_of_game:
+            #print(f"fim: {moviment.handle_utility_calculator()}")
             return moviment.handle_utility_calculator()
         
         new_player_id = PlayerId.Player1
@@ -481,19 +482,23 @@ class Controller(object):
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment_in_list in moviment_list_tmp:
                     utility = self.generate_minimax(moviment_in_list, new_player_id, False, turns - 1, alpha, beta)
+                    #print(f"alpha: {utility}")
                     alpha = max(utility, alpha)
-                    if beta <= alpha:
-                        continue
-                    return alpha
+                if beta <= alpha:
+                    continue
+                return alpha
+            return alpha
         else:
             for moviment_tuple in moviments:
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment_in_list in moviment_list_tmp:
                     utility = self.generate_minimax(moviment_in_list, new_player_id, True, turns - 1, alpha, beta)
+                    #print(f"beta: {utility}")
                     beta = min(utility, beta)
-                    if beta <= alpha:
-                        continue
-                    return beta
+                if beta <= alpha:
+                    continue
+                return beta
+            return beta
     
     def game_ended(self, local_game_state: list = None) -> bool:
         
