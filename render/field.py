@@ -78,15 +78,8 @@ class Field(object):
         self.selected_indexes = []
         self.raw_moviments = []
         self.moviments = []
-    
-        if self.player_id == PlayerId.Player1:
-            self.player_id = PlayerId.Player2
         
-        else:
-            self.player_id = PlayerId.Player1
-    
         return
-                            
     
     def handle_click(self, mouse_position):
         

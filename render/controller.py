@@ -4,6 +4,7 @@ from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
 from enuns.playerId import PlayerId
+from enuns.game_type import GameType
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
 from misc.qLearning import QLearning
@@ -13,10 +14,11 @@ import copy
 class Controller(object):
     
     # O init da classe recebe o display geral, sendo ele a tela principal do jogo
-    def __init__(self, display: Surface):                
+    def __init__(self, display: Surface, current_screen: GameType):                
         self.screen_width = display.get_width()
         self.screen_height = display.get_height()        
         self.display = display
+        self.current_screen = current_screen
         self.q_learning = QLearning()
         self.player_id = PlayerId.Player1
         self.rounds = 0
@@ -191,7 +193,64 @@ class Controller(object):
         
         return tuples
     
+    def handle_qLearning_play(self):
+        moviments = self.generate_moviments(self.game_state, self.player_id)
+            
+        best_moviment = self.q_learning.select_state(self.game_state, moviments, self.player_id)
+            
+        if best_moviment == None:
+            return
+            
+        print("Utilidade do movimento Q-Learning: ", best_moviment.utility)
+        
+        board_a = best_moviment.moviment_a.selection_properties.board_index
+        board_b = best_moviment.moviment_b.selection_properties.board_index            
+
+        self.update_game_state(best_moviment.moviment_a, best_moviment.moviment_b)
+            
+        self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
+        self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
+
+        if best_moviment.utility == 10000 or best_moviment.utility == -10000:
+            self.finished = True            
+
+        return
+        
     
+    def handle_minimax_play(self):
+        best_value = float('-inf') 
+        best_move = -1
+
+        moviments = self.generate_moviments(self.game_state, self.player_id)
+
+            
+        for moviment_tuple in moviments:
+            moviment_list_tmp = moviments[moviment_tuple]
+            for moviment in moviment_list_tmp:
+                utility = self.generate_minimax(moviment, self.player_id, False, 2, float('-inf'),float('+inf'))
+                if utility > best_value:
+                    best_value = utility
+                    best_move = moviment        
+
+        
+        print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
+        print("best_value do movimento minimax: ", best_value)
+        
+        if best_move.handle_utility_calculator() == 10000 or best_move.handle_utility_calculator() == -10000:
+            self.finished = True                
+
+        board_a = best_move.moviment_a.selection_properties.board_index
+        board_b = best_move.moviment_b.selection_properties.board_index        
+
+        self.update_game_state(best_move.moviment_a, best_move.moviment_b)
+        
+        self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
+        self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
+
+        self.rounds += 1
+        return
+
+
     def draw(self):
         self.field.draw()   
 
@@ -203,75 +262,33 @@ class Controller(object):
         
         if self.rounds > 10000:
             self.rounds = 0
-
-            
-        if self.player_id == PlayerId.Player1:
-                    
-            moviments = self.generate_moviments(self.game_state, self.player_id)
-            
-            best_moviment = self.q_learning.select_state(self.game_state, moviments, self.player_id)
-            
-            if best_moviment == None:
-                return
-            
-            print("Utilidade do movimento Q-Learning: ", best_moviment.utility)
         
+        print(f"ID do jogador: {self.player_id} - {self.field.player_id}")
+        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
 
-            board_a = best_moviment.moviment_a.selection_properties.board_index
-            board_b = best_moviment.moviment_b.selection_properties.board_index            
-
-            self.update_game_state(best_moviment.moviment_a, best_moviment.moviment_b)
+        if self.player_id == PlayerId.Player1:
             
-            self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
-            self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
-            
-            self.player_id = PlayerId.Player2
-            self.field.player_id = PlayerId.Player2
+            if self.current_screen == GameType.MinimaxVsMinimax or self.current_screen == GameType.MinimaxVsQLearning:
+                self.handle_minimax_play()
 
-            if best_moviment.utility == 10000 or best_moviment.utility == -10000:
-                self.finished = True            
+            if self.current_screen == GameType.QLearningVsQLearning:
+                self.handle_qLearning_play()
 
             return
         
-        if self.player_id == PlayerId.Player2:      
-                    
-            best_value = float('-inf') 
-            best_move = -1
+        else:
 
-            moviments = self.generate_moviments(self.game_state, self.player_id)
-
+            if (
+                self.current_screen == GameType.MinimaxVsQLearning or 
+                self.current_screen == GameType.PlayerVsQLearning or
+                self.current_screen == GameType.QLearningVsQLearning
+            ):
+                self.handle_qLearning_play()
                 
-            for moviment_tuple in moviments:
-                moviment_list_tmp = moviments[moviment_tuple]
-                for moviment in moviment_list_tmp:
-                    utility = self.generate_minimax(moviment, self.player_id, False, 2, float('-inf'),float('+inf'))
-                    if utility > best_value:
-                        best_value = utility
-                        best_move = moviment        
+            if self.current_screen == GameType.MinimaxVsMinimax or self.current_screen == GameType.PlayerVsMinimax:
+                self.handle_minimax_play()
 
-            
-            print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
-            print("best_value do movimento minimax: ", best_value)
-            
-        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
-            if best_move.handle_utility_calculator() == 10000 or best_move.handle_utility_calculator() == -10000:
-                self.finished = True                
-
-            board_a = best_move.moviment_a.selection_properties.board_index
-            board_b = best_move.moviment_b.selection_properties.board_index        
-
-            self.update_game_state(best_move.moviment_a, best_move.moviment_b)
-            
-            self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
-            self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
-            
-            self.player_id = PlayerId.Player1
-            self.field.player_id = PlayerId.Player1
-
-            self.rounds += 1
-        
-            
-        return
+            return
     
     
     def handle_click(self, mouse_position):
@@ -293,8 +310,6 @@ class Controller(object):
             
             selected_index = IndexCalculator.calculate_game_state(moviment.selection_properties.square_index, moviment.selection_properties.board_index)
             moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[moviment.selection_index], moviment.selection_properties.board_index)
-            #print('mov_sel:', moviment.selection_properties.square_index, 'mov_mov:', moviment.moviment_direction[moviment.selection_index])
-            #print('selected:', selected_index, 'moviment:', moviment_index)
 
             if moviment.selection_index == 0:
                 if game_state[moviment_index] != "":
@@ -347,11 +362,15 @@ class Controller(object):
             game_state[selected_index] = ""         
     
         if game_state == self.game_state:
+
             if self.player_id == PlayerId.Player1:
+                print("Atualizei para o player 2")
                 self.player_id = PlayerId.Player2
-            
+                self.field.player_id = PlayerId.Player2
             else:
-                self.player_id = PlayerId.Player1                                                    
+                print("Atualizei para o player 1")
+                self.player_id = PlayerId.Player1      
+                self.field.player_id = PlayerId.Player1                                              
 
         return
     
@@ -471,7 +490,10 @@ class Controller(object):
         moviments = self.generate_moviments(moviment.game_state, player_id)
         state_of_game = self.game_ended(moviment.game_state)
         if turns == 0 or state_of_game:
-            #print(f"fim: {moviment.handle_utility_calculator()}")
+            
+            # LÓGICA PARA REPETIÇÕES AQUI DENTRO... IRÁ VERIFICAR O SET DO CONTROLLER
+            # FUNÇÃO QUE RETORNA TRUE E FALSE E INSERE ESTADO NO SET
+
             return moviment.handle_utility_calculator()
         
         new_player_id = PlayerId.Player1

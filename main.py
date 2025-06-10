@@ -1,6 +1,8 @@
 # Example file showing a basic pygame "game loop"
 import pygame
 from render.controller import Controller
+from render.menu import Menu
+from enuns.game_type import GameType
 
 # pygame setup
 pygame.init()
@@ -24,6 +26,8 @@ mouse_img = pygame.image.load("assets/imgs/mouse.png")
 
 size_img_mouse = mouse_img.get_size()
 
+current_screen = GameType.MainMenu
+
 with open("assets/map/startmap.txt", "r") as file:
     mapa_inicial = file.read()
 
@@ -32,7 +36,8 @@ tabu_escuro = pygame.image.load("assets/imgs/tabu_escuro.png")
 
 tabu_pos = pygame.Vector2(0, 0)
 
-controller = Controller(screen)
+controller = Controller(screen, current_screen)
+menu = Menu(screen, current_screen)
 
 while running:
 
@@ -41,7 +46,13 @@ while running:
     
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos
-            controller.handle_click(event.pos)
+
+            if current_screen == GameType.MainMenu:
+                current_screen = menu.handle_click(event.pos)
+                controller.current_screen = current_screen
+
+            else:
+                controller.handle_click(event.pos)
                         
     
     # poll for events
@@ -50,12 +61,16 @@ while running:
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill((38, 11, 1))
-
-    controller.draw()
     
+    if current_screen == GameType.MainMenu:
+        menu.draw()
+
+    else:
+        controller.draw()
+
+
     # RENDER YOUR GAME HERE
     screen.blit(mouse_img, mouse_pos)
-
 
     # flip() the display to put your work on screen
     pygame.display.flip()
