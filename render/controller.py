@@ -203,9 +203,8 @@ class Controller(object):
         
         if self.rounds > 10000:
             self.rounds = 0
-            
-        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
 
+            
         if self.player_id == PlayerId.Player1:
                     
             moviments = self.generate_moviments(self.game_state, self.player_id)
@@ -234,7 +233,6 @@ class Controller(object):
 
             return
         
-        
         if self.player_id == PlayerId.Player2:      
                     
             best_value = float('-inf') 
@@ -255,6 +253,7 @@ class Controller(object):
             print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
             print("best_value do movimento minimax: ", best_value)
             
+        # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
             if best_move.handle_utility_calculator() == 10000 or best_move.handle_utility_calculator() == -10000:
                 self.finished = True                
 
@@ -270,6 +269,8 @@ class Controller(object):
             self.field.player_id = PlayerId.Player1
 
             self.rounds += 1
+        
+            
         return
     
     
@@ -289,14 +290,15 @@ class Controller(object):
             game_state = self.game_state
 
         for moviment in moviments:            
-                        
+            
             selected_index = IndexCalculator.calculate_game_state(moviment.selection_properties.square_index, moviment.selection_properties.board_index)
             moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[moviment.selection_index], moviment.selection_properties.board_index)
-                    
-            if moviment.selection_index == 0:
-                                    
-                if game_state[moviment_index] != "":
+            #print('mov_sel:', moviment.selection_properties.square_index, 'mov_mov:', moviment.moviment_direction[moviment.selection_index])
+            #print('selected:', selected_index, 'moviment:', moviment_index)
 
+            if moviment.selection_index == 0:
+                if game_state[moviment_index] != "":
+                
                     if moviment.moviment_direction[1] is not None:
                         secondary_moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[1], moviment.selection_properties.board_index)
                     
@@ -456,7 +458,7 @@ class Controller(object):
             for moviment in generated_mov_list:
                 moviment.game_state = game_state.copy()
                 
-                self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
+                #self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
         
         return generated_moviments
     

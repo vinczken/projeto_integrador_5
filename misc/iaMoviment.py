@@ -80,13 +80,13 @@ class IaMoviment:
     
     
     def handle_utility_calculator(self) -> int:        
-        self.utility = IaMoviment.utility_calculator(self.game_state, self.player_id)
+        self.utility = IaMoviment.utility_calculator(self.game_state, self.moviment_a, self.moviment_b, self.player_id)
         
         return self.utility
         
     
     @staticmethod                
-    def utility_calculator(game_state, player_id) -> int:
+    def utility_calculator(game_state, moviment_a, moviment_b, player_id) -> int:
         
         player_piece = 'W'
         enemy_piece = 'B'
@@ -98,130 +98,49 @@ class IaMoviment:
             player_piece = 'B'
             enemy_piece = 'W'        
         
-        for n in range(0, 4):
-            
-            board = game_state[(n * 16) : ((n + 1) * 16)]        
+        utility = 0
+        
+        # BORDA CIMA, BORDA 2 LINHA, BORDA 3 LINHA, BORDA BAIXO
+        board_limits = [[0,1,2,3], [4,7], [8,11], [12,13,14,15]]
 
-            # caso não exista peça do jogador no tabuleiro, então o jogador perdeu
+        moviments = [moviment_a, moviment_b]
+
+        for i in range(0, len(game_state), 16):
+            board = game_state[i:i+16]
+
             if player_piece not in board:
                 utility = -10000
                 return utility
             
-            # caso não exista peça do inimigo no tabuleiro, então o adversário perdeu
             if enemy_piece not in board:
                 utility = 10000
                 return utility
+
+        for moviment in moviments:
+
+            selected_index = IndexCalculator.calculate_game_state(moviment.selection_properties.square_index, moviment.selection_properties.board_index)
+            moviment_index = IndexCalculator.calculate_game_state(moviment.moviment_direction[moviment.selection_index], moviment.selection_properties.board_index)
             
-            qtd_enemy = board.count(enemy_piece)
-            qtd_player = board.count(player_piece)
+            #  INCENTIVA A UTILIZAR A SUAS PROPRIAS BOARDS PARA MAIS VANTAGEM DE MOVIMENTO
+            if selected_index < 32 and player_id == PlayerId.Player1:
+                player_sum += 10
+            elif selected_index > 31 and player_id == PlayerId.Player2:
+                player_sum += 10
+            else:
+                enemy_sum += 10
             
-            if qtd_enemy > qtd_player:
-                enemy_sum += qtd_enemy * 10
-
-            if qtd_player > qtd_enemy:
-                player_sum += qtd_player * 5
-
-            utility = (qtd_player - qtd_enemy) * 10
-
-            for piece_index in range(len(board)):
-                
-                piece = board[piece_index]
-
-                if piece == '':
-                    continue
-                
-                piece_row, piece_column = IndexCalculator.calculate_row_column(piece_index)
-
-                for direction in range(8):
-                    
-                    distance_1 = piece_row + IaMoviment.distances[0][direction][0], piece_column + IaMoviment.distances[0][direction][1]
-                    distance_2 = piece_row + IaMoviment.distances[1][direction][0], piece_column + IaMoviment.distances[1][direction][1]
-                    distance_3 = piece_row + IaMoviment.distances[2][direction][0], piece_column + IaMoviment.distances[2][direction][1]
-                
-                    distance_1_index = -1
-                    distance_2_index = -1
-                    distance_3_index = -1
-                
-                    if 0 <= distance_1[0] <= 3 and 0 <= distance_1[1] <= 3:
-                        distance_1_index = IndexCalculator.calculate(distance_1[0], distance_1[1])
-                    
-                    if 0 <= distance_2[0] <= 3 and 0 <= distance_2[1] <= 3:
-                        distance_2_index = IndexCalculator.calculate(distance_2[0], distance_2[1])
-                    
-                    if 0 <= distance_3[0] <= 3 and 0 <= distance_3[1] <= 3:
-                        distance_3_index = IndexCalculator.calculate(distance_3[0], distance_3[1])
-                
-                    if distance_1_index == -1:
-                        continue
-                    
-                    if piece == board[distance_1_index]:
-                        
-                        if piece == player_piece:
-                            player_sum += 1
-                        
-                        else:
-                            enemy_sum += 1
-                        
-                        continue
-                    
-                    if board[distance_1_index] != '' and board[distance_1_index] != piece:
-                        
-                        if distance_2_index == -1:
-                            if piece == player_piece:
-                                player_sum += 10
-                                
-                            else:
-                                enemy_sum += 20
-                                
-                            continue
-                        
-                        # Somado 6 porque a peça pode ser movida ou empurrada do tabuleiro;
-                        # O cenario eh: _ X 0 _                                            
-                        if board[distance_2_index] == '':
-                            
-                            if distance_3_index == -1:                                
-                                if piece == player_piece:
-                                    player_sum += 10
-                                
-                                else:
-                                    enemy_sum += 20
-                                    
-                            # O cenario é: _ X 0 X ou _ X 0 0
-                            # Para o cenário, não possui caso
-                            
-                            continue                            
-                    
-                    if board[distance_1_index] == '':
-                        
-                        if distance_2_index == -1:
-                            continue
-                        
-                        if board[distance_2_index] == '':
-                            continue
-                        
-                        if board[distance_2_index] != '' and board[distance_2_index] != piece:
-                            
-                            if distance_3_index == -1:
-                                if board[distance_2_index] == enemy_piece:
-                                    player_sum += 10
-                                    
-                                else:
-                                    enemy_sum += 20
-                                    
-                                continue
-                            
-                            if board[distance_3_index] == '':
-                                if board[distance_2_index] == enemy_piece:
-                                    player_sum += 2
-                                    
-                                else: 
-                                    enemy_sum += 5
-                            
-                                continue
-                        
-                            # Talvez aqui haja um caso para quando o terceiro espaço possui uma peça inimiga ou do jogador
-                            # cenários: X _ 0 X ou X _ 0 0
-                            # não é possivel mover a peça assim, nem contabilizar pontos...
+            # ESTA INDO PARA A BORDA DE UM TABULEIRO
+            if any((moviment_index % 16) in sub for sub in board_limits):
+                if game_state[moviment_index] != '':
+                    player_sum += 50
+                else:
+                    enemy_sum += 60
             
+            # INCENTIVA MOVER INIMIGOS
+            if game_state[moviment_index] != '':
+                player_sum += 50
+            else:
+                enemy_sum += 60
+
         utility += player_sum - enemy_sum
         return utility
