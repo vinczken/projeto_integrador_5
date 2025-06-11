@@ -81,11 +81,14 @@ class QLearning(object):
     
     
     def load_table(self):
-        if os.path.exists("q_table.pkl") and os.path.getsize("q_table.pkl") > 0:    
-            with open("q_table.pkl", 'rb') as file:
+        game_path = os.path.join(os.getcwd(), "q_table.pkl")
+        if os.path.exists(game_path) and os.path.getsize(game_path) > 0:    
+            with open(game_path, 'rb') as file:
                 q_table_loaded = pickle.load(file)
                 self.q_table = defaultdict(dict, q_table_loaded)
         
     def save_table(self):
-        with open("./q_table.pkl", "wb") as file:
-            pickle.dump(dict(self.q_table), file)    
+        game_path = os.path.join(os.getcwd(), "q_table.pkl")
+        if os.path.exists(game_path):            
+            with open(game_path, "wb") as file:
+                pickle.dump(dict(self.q_table), file)

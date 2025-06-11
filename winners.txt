@@ -1,2 +1,2 @@
-minimax:11
-qlearning:7395
+minimax:22
+qlearning:8104
