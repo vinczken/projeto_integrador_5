@@ -24,6 +24,7 @@ class Controller(object):
         self.rounds = 0
         self.finished = False
         self.training = False
+        self.train_with_other_models = False
         
         self.game_state = [
             "W","W","W","W",
@@ -78,12 +79,13 @@ class Controller(object):
             "B","B","B","B"
         ]
         
-        if self.current_screen == GameType.MinimaxVsQLearning:
-            self.current_screen = GameType.QLearningVsQLearning
-            
-        else:
-            self.current_screen = GameType.MinimaxVsQLearning
-            
+        if self.train_with_other_models:
+            if self.current_screen == GameType.MinimaxVsQLearning:
+                self.current_screen = GameType.QLearningVsQLearning
+                
+            else:
+                self.current_screen = GameType.MinimaxVsQLearning
+        
         self.finished = False
         
         for i in range(4):
