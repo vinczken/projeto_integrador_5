@@ -1,4 +1,4 @@
-from pygame import Surface, Rect, draw, font
+from pygame import Surface, Rect, draw, font, image, transform
 from enuns.game_type import GameType
 
 class Menu(object):
@@ -62,6 +62,17 @@ class Menu(object):
                 self.buttons_width * 0.5, 
                 self.buttons_height * 0.5
             )
+        
+        logo_image = image.load("./assets/imgs/logo.png")
+
+        logo_height = self.screen_height * 0.18
+        logo_width = self.screen_width * 0.22
+        
+        self.logo = transform.scale(logo_image, (logo_width, logo_height))
+        
+        self.logo_x = (self.screen_width / 2) - self.screen_width * 0.11
+        self.logo_y = 25
+
 
     def draw_button(self, index):
 
@@ -87,6 +98,7 @@ class Menu(object):
         
         training_rect = text_training.get_rect(center=self.training_button.center)
         
+        self.display.blit(self.logo, (self.logo_x, self.logo_y))
         self.display.blit(text_training, training_rect)
 
 

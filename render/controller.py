@@ -1,6 +1,6 @@
 from collections import defaultdict
 from misc.indexCalc import IndexCalculator
-from pygame import Surface
+from pygame import Surface, Rect, draw, font
 from render.field import Field
 from misc.movimentProperties import MovimentProperties
 from misc.selectionProperties import SelectionProperties
@@ -59,8 +59,21 @@ class Controller(object):
             4: (0, 3),
             5: (3, -3),
             6: (3, 0),
-            7: (3, 3),            
+            7: (3, 3),
         }
+
+        width, height = self.display.get_size()
+
+        modal_width = width * 0.4
+        modal_height = height * 0.6
+
+        modal_x = width / 2 - modal_width / 2
+        modal_y = height / 2 - modal_height / 2
+
+        self.modal = Rect(modal_x, modal_y, modal_width, modal_height)
+
+        self.return_button = Rect(width * 0.05, height * 0.05, width * 0.09, height * 0.05)
+        self.font = font.SysFont("Segoe UI Emoji", 26)
 
 
     def reset_game(self):
@@ -261,7 +274,7 @@ class Controller(object):
         for moviment_tuple in moviments:
             moviment_list_tmp = moviments[moviment_tuple]
             for moviment in moviment_list_tmp:
-                utility = self.generate_minimax(moviment, self.player_id, False, 0, float('-inf'),float('+inf'))
+                utility = self.generate_minimax(moviment, self.player_id, False, 1, float('-inf'),float('+inf'))
                 if utility > best_value:
                     best_value = utility
                     best_move = moviment        
@@ -281,8 +294,24 @@ class Controller(object):
         self.rounds += 1
         return
 
+
+    def draw_modal(self):
+
+        draw.rect(self.display, (153, 65, 16), self.modal, border_radius=10)
+
+    def draw_return(self):
+
+        draw.rect(self.display, (153, 65, 16), self.return_button, border_radius=10)
+
+        text = "◀ Voltar"
+
+        text_render = self.font.render(text, True, (0, 0, 0))
+        text_rect = text_render.get_rect(center=self.return_button.center)
+
+        self.display.blit(text_render, text_rect)
+
     def draw(self):
-        self.field.draw()   
+        self.field.draw()           
 
         if self.finished == True:
             
@@ -292,8 +321,12 @@ class Controller(object):
             
             if self.training:
                 self.reset_game()
-                
+            
+            self.draw_modal()
+            
             return
+
+        self.draw_return()
 
         if self.rounds % 100 == 0:
             self.q_learning.save_table();
@@ -332,6 +365,9 @@ class Controller(object):
 
         if len(self.field.selected_indexes) == 2:
             self.handle_moves()
+
+        if self.return_button.collidepoint(mouse_position):            
+            self.current_screen = GameType.MainMenu
 
         return
     
@@ -409,6 +445,16 @@ class Controller(object):
                 self.player_id = PlayerId.Player1      
                 self.field.player_id = PlayerId.Player1                                              
 
+        flag_finished = False
+
+        for i in range(4):
+
+            if not 'W' in self.game_state[(i*16) : ((i+1)*16)]:
+                self.finished = True
+
+            if not 'B' in self.game_state[(i*16) : ((i+1)*16)]:
+                self.finished = True
+            
         return
     
     def find_secondary_indexes(self, indexes, selected_index, player_id: PlayerId):
