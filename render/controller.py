@@ -23,6 +23,7 @@ class Controller(object):
         self.player_id = PlayerId.Player1
         self.rounds = 0
         self.finished = False
+        self.training = False
         
         self.game_state = [
             "W","W","W","W",
@@ -56,9 +57,43 @@ class Controller(object):
             7: (3, 3),            
         }
 
-        self.aux_positions_2 = {
 
-        }
+    def reset_game(self):
+        self.game_state = [
+            "W","W","W","W",
+            "","","","",
+            "","","","",
+            "B","B","B","B",
+            "W","W","W","W",
+            "","","","",
+            "","","","",
+            "B","B","B","B",
+            "W","W","W","W",
+            "","","","",
+            "","","","",
+            "B","B","B","B",
+            "W","W","W","W",
+            "","","","",
+            "","","","",
+            "B","B","B","B"
+        ]
+        
+        if self.current_screen == GameType.MinimaxVsQLearning:
+            self.current_screen = GameType.QLearningVsQLearning
+            
+        else:
+            self.current_screen = GameType.MinimaxVsQLearning
+            
+        self.finished = False
+        
+        for i in range(4):
+            self.field.boards[i].update_game_state(self.game_state[(16 * i) : 16 * (i + 1)])
+            
+        self.player_id = PlayerId.Player1      
+        self.field.player_id = PlayerId.Player1
+
+        self.rounds = 0
+
 
     def handle_moves(self):
         boardA = self.field.selected_indexes[0].board_index
@@ -73,7 +108,6 @@ class Controller(object):
         moviments = self.merge_moves(boardA, boardA_moves, boardB, boardB_moves)    
         
         self.field.set_moviments(moviments, [boardA_moves, boardB_moves])
-        
         
     def merge_moves(self, boardA_index, boardA_moves, boardB_index, boardB_moves, game_state: list = None):
         
@@ -121,7 +155,6 @@ class Controller(object):
 
         
         return moviments
-    
     
     def calculate_valid_moves(self, square_index, board_state):
         row_square = int(square_index / 4)
@@ -199,9 +232,7 @@ class Controller(object):
         best_moviment = self.q_learning.select_state(self.game_state, moviments, self.player_id)
             
         if best_moviment == None:
-            return
-            
-        print("Utilidade do movimento Q-Learning: ", best_moviment.utility)
+            return        
         
         board_a = best_moviment.moviment_a.selection_properties.board_index
         board_b = best_moviment.moviment_b.selection_properties.board_index            
@@ -233,9 +264,6 @@ class Controller(object):
                     best_move = moviment        
 
         
-        print("Utilidade do movimento minimax: ", best_move.handle_utility_calculator())
-        print("best_value do movimento minimax: ", best_value)
-        
         if best_move.handle_utility_calculator() == 10000 or best_move.handle_utility_calculator() == -10000:
             self.finished = True                
 
@@ -255,15 +283,18 @@ class Controller(object):
         self.field.draw()   
 
         if self.finished == True:
+            
+            if self.training:
+                self.reset_game()
+                
             return
 
-        if self.rounds % 10 == 0:
+        if self.rounds % 100 == 0:
             self.q_learning.save_table();
         
         if self.rounds > 10000:
             self.rounds = 0
         
-        print(f"ID do jogador: {self.player_id} - {self.field.player_id}")
         # IMPLEMENTAÇÃO DA ATUALIZAÇÃO E GERAÇÃO DO MOVIMENTO PELA IA     
 
         if self.player_id == PlayerId.Player1:
@@ -363,12 +394,10 @@ class Controller(object):
     
         if game_state == self.game_state:
 
-            if self.player_id == PlayerId.Player1:
-                print("Atualizei para o player 2")
+            if self.player_id == PlayerId.Player1:                
                 self.player_id = PlayerId.Player2
                 self.field.player_id = PlayerId.Player2
             else:
-                print("Atualizei para o player 1")
                 self.player_id = PlayerId.Player1      
                 self.field.player_id = PlayerId.Player1                                              
 

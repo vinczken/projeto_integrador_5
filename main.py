@@ -49,8 +49,17 @@ while running:
 
             if current_screen == GameType.MainMenu:
                 current_screen = menu.handle_click(event.pos)
-                controller.current_screen = current_screen
+                
+                if (current_screen != None):
+                    controller.current_screen = current_screen
 
+                else:
+                    training_button_click = menu.handle_click_training(event.pos)
+                    
+                    if (training_button_click):
+                        controller.training = True
+                        controller.current_screen = GameType.QLearningVsQLearning                        
+                
             else:
                 controller.handle_click(event.pos)
                         
