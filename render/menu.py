@@ -23,15 +23,15 @@ class Menu(object):
         self.start_button_y = (self.screen_height / 2) - self.buttons_height
 
         self.buttons = []
-        self.font = font.SysFont(None, 36)
+        self.font = font.SysFont("Segoe UI Emoji", 32)
 
         self.texts = [
-            'Player vs Player',
-            'Player vs Minimax',
-            'Player vs QLearning',
-            'Minimax vs QLearning',
-            'Minimax vs Minimax',
-            'QLearning vs QLearning'
+            '👤 Player vs Player 👤',
+            '👤 Player vs Minimax 🤖',
+            '👤 Player vs QLearning 🦾',
+            '🤖 Minimax vs QLearning 🦾',
+            '🤖 Minimax vs Minimax 🤖',
+            '🦾 QLearning vs QLearning 🦾'
         ]
 
         training_button_y = 0
