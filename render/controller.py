@@ -1,3 +1,4 @@
+from collections import defaultdict
 from misc.indexCalc import IndexCalculator
 from pygame import Surface
 from render.field import Field
@@ -8,6 +9,7 @@ from enuns.game_type import GameType
 from misc.iaMovimentProperties import IaMovimentProperties
 from misc.iaMoviment import IaMoviment
 from misc.qLearning import QLearning
+import os
 import random
 import copy
 
@@ -25,6 +27,8 @@ class Controller(object):
         self.finished = False
         self.training = False
         self.train_with_other_models = False
+        
+        self.previous_game_state = []
         
         self.game_state = [
             "W","W","W","W",
@@ -95,7 +99,6 @@ class Controller(object):
         self.field.player_id = PlayerId.Player1
 
         self.rounds = 0
-
 
     def handle_moves(self):
         boardA = self.field.selected_indexes[0].board_index
@@ -239,16 +242,14 @@ class Controller(object):
         board_a = best_moviment.moviment_a.selection_properties.board_index
         board_b = best_moviment.moviment_b.selection_properties.board_index            
 
-        self.update_game_state(best_moviment.moviment_a, best_moviment.moviment_b)
+        self.update_game_state(best_moviment.moviment_a, best_moviment.moviment_b, True)
             
         self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
         self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
 
         if best_moviment.utility == 10000 or best_moviment.utility == -10000:
             self.finished = True            
-
         return
-        
     
     def handle_minimax_play(self):
         best_value = float('-inf') 
@@ -260,7 +261,7 @@ class Controller(object):
         for moviment_tuple in moviments:
             moviment_list_tmp = moviments[moviment_tuple]
             for moviment in moviment_list_tmp:
-                utility = self.generate_minimax(moviment, self.player_id, False, 2, float('-inf'),float('+inf'))
+                utility = self.generate_minimax(moviment, self.player_id, False, 0, float('-inf'),float('+inf'))
                 if utility > best_value:
                     best_value = utility
                     best_move = moviment        
@@ -272,7 +273,7 @@ class Controller(object):
         board_a = best_move.moviment_a.selection_properties.board_index
         board_b = best_move.moviment_b.selection_properties.board_index        
 
-        self.update_game_state(best_move.moviment_a, best_move.moviment_b)
+        self.update_game_state(best_move.moviment_a, best_move.moviment_b, True)
         
         self.field.boards[board_a].update_game_state(self.game_state[(16 * board_a) : 16 * (board_a + 1)])
         self.field.boards[board_b].update_game_state(self.game_state[(16 * board_b) : 16 * (board_b + 1)])
@@ -280,11 +281,14 @@ class Controller(object):
         self.rounds += 1
         return
 
-
     def draw(self):
         self.field.draw()   
 
         if self.finished == True:
+            
+            if self.training and GameType.MinimaxVsQLearning:
+                winner = self.game_ended_winner()
+                self.update_winners(winner)
             
             if self.training:
                 self.reset_game()
@@ -323,7 +327,6 @@ class Controller(object):
 
             return
     
-    
     def handle_click(self, mouse_position):
         self.field.handle_click(mouse_position)
 
@@ -332,12 +335,15 @@ class Controller(object):
 
         return
     
-    def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties, game_state: list = None):
+    def update_game_state(self, moviment_properties_A: MovimentProperties, moviment_properties_B: MovimentProperties, update_player: bool = False, game_state: list = None):
         
         moviments = [moviment_properties_A, moviment_properties_B]
         
+        
         if game_state is None:
             game_state = self.game_state
+        
+        self.previous_game_state = game_state
 
         for moviment in moviments:            
             
@@ -394,7 +400,7 @@ class Controller(object):
             game_state[moviment_index] = game_state[selected_index]
             game_state[selected_index] = ""         
     
-        if game_state == self.game_state:
+        if game_state == self.game_state and update_player:
 
             if self.player_id == PlayerId.Player1:                
                 self.player_id = PlayerId.Player2
@@ -443,7 +449,6 @@ class Controller(object):
                                 ]
             
         return possible_indexes
-
 
     def generate_moviments(self, game_state: list, player_id: PlayerId) -> dict[tuple, list[IaMoviment]]:
         
@@ -507,18 +512,20 @@ class Controller(object):
 
             for moviment in generated_mov_list:
                 moviment.game_state = game_state.copy()
+                moviment.updated_game_state = game_state.copy()
+                if(self.previous_game_state != []):
+                    moviment.previous_game_state = self.previous_game_state.copy()
                 
-                #self.update_game_state(moviment.moviment_a, moviment.moviment_b, moviment.game_state)
+                self.update_game_state(moviment.moviment_a, moviment.moviment_b, False, moviment.updated_game_state)
         
         return generated_moviments
-    
     
     def generate_minimax(self, moviment: IaMoviment = None, player_id: PlayerId = None, max_turn: bool = True, turns: int = 3, alpha = float('-inf'), beta = float('+inf')) -> int:
             
         if player_id is None:
             player_id = self.player_id    
         
-        moviments = self.generate_moviments(moviment.game_state, player_id)
+        moviments = self.generate_moviments(moviment.updated_game_state, player_id)
         state_of_game = self.game_ended(moviment.game_state)
         if turns == 0 or state_of_game:
             
@@ -537,7 +544,6 @@ class Controller(object):
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment_in_list in moviment_list_tmp:
                     utility = self.generate_minimax(moviment_in_list, new_player_id, False, turns - 1, alpha, beta)
-                    #print(f"alpha: {utility}")
                     alpha = max(utility, alpha)
                 if beta <= alpha:
                     continue
@@ -548,7 +554,6 @@ class Controller(object):
                 moviment_list_tmp = moviments[moviment_tuple]
                 for moviment_in_list in moviment_list_tmp:
                     utility = self.generate_minimax(moviment_in_list, new_player_id, True, turns - 1, alpha, beta)
-                    #print(f"beta: {utility}")
                     beta = min(utility, beta)
                 if beta <= alpha:
                     continue
@@ -566,3 +571,32 @@ class Controller(object):
             if all(piece == non_empty[0] for piece in non_empty):
                 return True
         return False
+    
+    def game_ended_winner(self, local_game_state: list = None) -> bool:
+        
+        if local_game_state == None:
+            local_game_state = self.game_state
+        
+        for i in range(0, len(local_game_state), 16):
+            board = local_game_state[i:i+16]
+            non_empty = [piece for piece in board if piece != ""]
+            if all(piece == non_empty[0] for piece in non_empty):
+                if non_empty[0] == 'W': return 'minimax'
+                else: return 'qlearning'
+        return None
+
+    def update_winners(self, winner):
+        
+        winners = defaultdict(int)
+        
+        if os.path.exists('./winners.txt'):
+            with open('./winners.txt', 'r') as f:
+                for line in f:
+                    name, qtd = line.strip().split(':')
+                    winners[name] = int(qtd)
+        
+        winners[winner] += 1
+        
+        with open('./winners.txt', 'w') as f:
+            for name, qtd in winners.items():
+                f.write(f'{name}:{qtd}\n')

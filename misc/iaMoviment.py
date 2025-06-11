@@ -12,10 +12,12 @@ class IaMoviment:
         IndexCalculator.aux_positions(3)        
     ]
 
-    def __init__(self, moviment_a: MovimentProperties, moviment_b: MovimentProperties, game_state, player_id: PlayerId):
+    def __init__(self, moviment_a: MovimentProperties, moviment_b: MovimentProperties, game_state, previous_game_state, updated_game_state, player_id: PlayerId):
         self.moviment_a = moviment_a
         self.moviment_b = moviment_b
+        self.previous_game_state = previous_game_state
         self.game_state = game_state
+        self.updated_game_state = updated_game_state
         self.player_id = player_id
         self.utility = 0
         
@@ -70,23 +72,23 @@ class IaMoviment:
                     )
 
                 if moviment_key in ia_moviments:
-                    ia_moviments[moviment_key].append(IaMoviment(moviment_a, moviment_b, [], player_id))
+                    ia_moviments[moviment_key].append(IaMoviment(moviment_a, moviment_b, [], [], [], player_id))
 
                 else:                    
-                    ia_moviments[moviment_key] = [IaMoviment(moviment_a, moviment_b, [], player_id)]
+                    ia_moviments[moviment_key] = [IaMoviment(moviment_a, moviment_b, [], [], [], player_id)]
                 
         
         return ia_moviments
     
     
     def handle_utility_calculator(self) -> int:        
-        self.utility = IaMoviment.utility_calculator(self.game_state, self.moviment_a, self.moviment_b, self.player_id)
+        self.utility = IaMoviment.utility_calculator(self.previous_game_state, self.game_state, self.moviment_a, self.moviment_b, self.player_id)
         
         return self.utility
         
     
     @staticmethod                
-    def utility_calculator(game_state, moviment_a, moviment_b, player_id) -> int:
+    def utility_calculator(previous_game_state, game_state, moviment_a, moviment_b, player_id) -> int:
         
         player_piece = 'W'
         enemy_piece = 'B'
@@ -99,6 +101,10 @@ class IaMoviment:
             enemy_piece = 'W'        
         
         utility = 0
+        
+        has_previous_game = False
+        if previous_game_state != []:
+            has_previous_game = True
         
         # BORDA CIMA, BORDA 2 LINHA, BORDA 3 LINHA, BORDA BAIXO
         board_limits = [[0,1,2,3], [4,7], [8,11], [12,13,14,15]]
@@ -128,6 +134,14 @@ class IaMoviment:
                 player_sum += 10
             else:
                 enemy_sum += 10
+            
+            # NÃO É O COMEÇO DO JOGO E TEM HISTORICO
+            if has_previous_game:
+                # SE ONDE A PEÇA ESTA INDO TINHA SUA PROPRIA PEÇA ANTES (REPETINDO O MOVIMENTO)
+                if previous_game_state[moviment_index] == player_piece:
+                    enemy_sum += 10000
+                else:
+                    player_sum += 10
             
             # ESTA INDO PARA A BORDA DE UM TABULEIRO
             if any((moviment_index % 16) in sub for sub in board_limits):

@@ -66,7 +66,7 @@ class Field(object):
         moviment_A = MovimentProperties(self.selected_indexes[0], self.raw_moviments[0][item], item, tuple_item_index)
         moviment_B = MovimentProperties(self.selected_indexes[1], self.raw_moviments[1][item], item, tuple_item_index)
                 
-        self.update_game_state(moviment_A, moviment_B)
+        self.update_game_state(moviment_A, moviment_B, True)
         
         for selected_index in self.selected_indexes:
             board_index = selected_index.board_index 

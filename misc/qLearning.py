@@ -11,6 +11,7 @@ class QLearning(object):
         
         self.load_table()        
         
+        self.exploratory = True
         self.ALPHA = 0.1
         self.GAMMA = 0.8
     
@@ -49,8 +50,10 @@ class QLearning(object):
                 if q_state == None:
                 
                     utility = moviment.handle_utility_calculator()
-                    self.q_table[copy_game_state][(direction_index, selection_index)] = utility                
-                
+                    self.q_table[copy_game_state][(direction_index, selection_index)] = utility 
+                    if self.exploratory:
+                        best_utility = 999999
+                        best_moviment = moviment
                 else:
                     
                     utility = moviment.handle_utility_calculator()
@@ -58,7 +61,10 @@ class QLearning(object):
                     q_action = q_state.get((direction_index, selection_index), None)
                     
                     if q_action is None:                        
-                        self.q_table[copy_game_state][(direction_index, selection_index)] = utility                        
+                        self.q_table[copy_game_state][(direction_index, selection_index)] = utility 
+                        if self.exploratory:
+                            best_utility = 999999
+                            best_moviment = moviment
                     
                     else:                        
                         max_value = max(q_state.values())
